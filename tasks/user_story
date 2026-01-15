@@ -1,0 +1,73 @@
+A home cook wants a simple way to know what is inside reusable food containers in the freezer without opening them, by tapping each container with an iPhone to see and update its contents.[1]
+
+## User story
+
+As a **home cook** who freezes leftovers in unlabelled boxes,  
+I want to tap an NFC‑enabled container with my iPhone and see the saved information about what is inside,  
+so that I can quickly identify, update, or reuse the container without guessing or opening it.[2][1]
+
+## Scope of the first test app
+
+- The app will support a single NFC tag type (e.g., a basic NDEF NFC tag embedded in or attached to the container).[3]
+- The app will treat each physical tag as a “container record” with a small set of fields:  
+  - Container ID (stored on the tag)  
+  - Food name  
+  - Date frozen  
+  - Optional notes (e.g., “spicy”, “for guests”)[1]
+- The tag will store either the full data or a compact ID that the app uses to look up data in local storage.[3]
+
+## Basic journeys to demonstrate feasibility
+
+1. **Create / Write to tag**  
+   - User opens the app and chooses “Add container”.  
+   - User types food name, date, and optional notes.  
+   - App asks the user to hold the iPhone near the NFC tag.  
+   - App writes a new record to the tag (and/or saves it locally linked to the tag’s ID).  
+   - User sees a confirmation that the container has been saved.[2][1]
+
+2. **Read from tag**  
+   - User opens the app and chooses “Scan container”.  
+   - User taps the iPhone on the tag.  
+   - App reads the tag, finds the linked record, and displays food name, date, and notes.  
+   - User can close the view knowing what is in the box without opening it.[1]
+
+3. **Update (Edit) existing tag**  
+   - User scans an existing container as above.  
+   - On the details screen, user taps “Edit”, changes fields (for example, updates notes or corrects the food name).  
+   - App saves the updated record and, if needed, rewrites the data on the tag.  
+   - User sees confirmation that the container details are updated.[2][3]
+
+4. **Clear / Reuse container**  
+   - After the food is used, user scans the container.  
+   - User taps “Clear & reuse”.  
+   - App either clears the stored fields or marks the container as empty and updates or rewrites the tag accordingly.  
+   - The container and its tag are now ready to be assigned to a new meal.[1]
+
+## Out-of-scope for this first test
+
+- No multi-user syncing, accounts, or cloud backend in the initial prototype.  
+- No complex data structures, images, or long notes on the tag; only minimal fields needed to prove read/write/edit.[3]
+- No automation such as background scanning or system‑wide shortcuts; all interactions start from inside the test app.[2]
+
+## Definition of “done” for the feasibility prototype
+
+- The app successfully reads and writes to at least one chosen NFC tag type using an iPhone, including:  
+  - Writing a new record from user input.  
+  - Reading an existing record from the same tag.  
+  - Editing and rewriting that record.[3][1]
+- The dev/project team can consistently demonstrate the above 3 flows in a short in‑person or recorded demo using real tags attached to containers.[1]
+
+Sources
+[1] I'm interested in using RF ID tags to put in small boxes that I put in my freezer. The problem not trying to solve that once I put a box into the freezer with food in it I've got no idea what foods in the box once it's frozen. But I thought it would ...
+
+...s low cost as possible. I appreciate we may need to pay a little bit more to begin with if we're just buying very small numbers, but we would want to be able to buy these in larger numbers and maybe dropship as we sell the product to the wide market. https://www.perplexity.ai/search/e5a82818-0bd9-483e-afd6-37197ca8ff3b
+[2] How about rather than embedding the RFID tag? Why do we not just have a tag that we can put in and it sits on top of the food and we can take it out and wash it and reuse it? https://www.perplexity.ai/search/ec609ade-eb98-4d1c-a273-7941e60597e5
+[3] Goal:
+Identify and compare ultra-low-cost RFID tags suitable for embedding in small freezer-safe food containers. These RFID tags must:
+
+Be cost-effective, especially when scaled to bulk purchase or dropshipping.
+Function reliably at domestic freezer...
+
+...l intent to commercialise this solution, hence the need for dropshipping capabilities.
+
+The solution must consider environmental durability (cold, moisture), food safety, cost-efficiency, and ease of integration into a simple consumer product system. https://www.perplexity.ai/search/4f7fe888-f980-46fc-9059-bfe5626bd8cc

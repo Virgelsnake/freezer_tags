@@ -1,0 +1,75 @@
+name: FreezerTagTracker
+options:
+  bundleIdPrefix: com.freezertagtracker
+  deploymentTarget:
+    iOS: "15.0"
+  developmentLanguage: en
+  
+targets:
+  FreezerTagTracker:
+    type: application
+    platform: iOS
+    sources:
+      - FreezerTagTracker
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.freezertagtracker.FreezerTagTracker
+        INFOPLIST_FILE: FreezerTagTracker/Info.plist
+        SWIFT_VERSION: "5.9"
+        TARGETED_DEVICE_FAMILY: "1"
+        IPHONEOS_DEPLOYMENT_TARGET: "15.0"
+      configs:
+        Debug:
+          SWIFT_OPTIMIZATION_LEVEL: "-Onone"
+        Release:
+          SWIFT_OPTIMIZATION_LEVEL: "-O"
+    entitlements:
+      path: FreezerTagTracker/FreezerTagTracker.entitlements
+      properties:
+        com.apple.developer.nfc.readersession.formats:
+          - NDEF
+    info:
+      path: FreezerTagTracker/Info.plist
+      properties:
+        CFBundleDevelopmentRegion: $(DEVELOPMENT_LANGUAGE)
+        CFBundleExecutable: $(EXECUTABLE_NAME)
+        CFBundleIdentifier: $(PRODUCT_BUNDLE_IDENTIFIER)
+        CFBundleInfoDictionaryVersion: "6.0"
+        CFBundleName: $(PRODUCT_NAME)
+        CFBundlePackageType: APPL
+        CFBundleShortVersionString: "1.0"
+        CFBundleVersion: "1"
+        LSRequiresIPhoneOS: true
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+          UISceneConfigurations:
+            UIWindowSceneSessionRoleApplication:
+              - UISceneConfigurationName: Default Configuration
+                UISceneDelegateClassName: $(PRODUCT_MODULE_NAME).SceneDelegate
+        UIApplicationSupportsIndirectInputEvents: true
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        NFCReaderUsageDescription: "This app needs NFC access to read and write container information to NFC tags"
+        
+  FreezerTagTrackerTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - FreezerTagTrackerTests
+    dependencies:
+      - target: FreezerTagTracker
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.freezertagtracker.FreezerTagTrackerTests
+        INFOPLIST_FILE: FreezerTagTrackerTests/Info.plist
+        SWIFT_VERSION: "5.9"
+        TARGETED_DEVICE_FAMILY: "1"
+        IPHONEOS_DEPLOYMENT_TARGET: "15.0"

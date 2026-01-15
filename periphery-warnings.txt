@@ -1,0 +1,5 @@
+6:/Users/steveshearman/xcode_projects/freezer_tag_poc/FreezerTagTracker/Models/NFCManager.swift:157:10: warning: Unused function 'cancelSession()'
+7:/Users/steveshearman/xcode_projects/freezer_tag_poc/FreezerTagTracker/Utilities/OverlayWindowManager.swift:6:13: warning: Unused class 'OverlayWindowManager'
+8:/Users/steveshearman/xcode_projects/freezer_tag_poc/FreezerTagTracker/Utilities/OverlayWindowManager.swift:104:16: warning: Unused struct 'OverlayContainerView'
+9:/Users/steveshearman/xcode_projects/freezer_tag_poc/FreezerTagTracker/ViewModels/ContainerViewModel.swift:152:10: warning: Unused function 'updateContainerWithNFC(record:completion:)'
+10:/Users/steveshearman/xcode_projects/freezer_tag_poc/FreezerTagTrackerTests/FreezerTagTrackerTests.swift:2:1: warning: Unused imported module 'FreezerTagTracker'
