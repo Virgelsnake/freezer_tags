@@ -43,6 +43,7 @@ class DataStore {
             entity.foodName = record.foodName
             entity.dateFrozen = record.dateFrozen
             entity.notes = record.notes
+            entity.bestBeforeDate = record.bestBeforeDate
             entity.isCleared = record.isCleared
             entity.createdAt = record.createdAt
             entity.updatedAt = record.updatedAt
@@ -113,6 +114,7 @@ class DataStore {
             entity.foodName = record.foodName
             entity.dateFrozen = record.dateFrozen
             entity.notes = record.notes
+            entity.bestBeforeDate = record.bestBeforeDate
             entity.isCleared = record.isCleared
             entity.updatedAt = Date()
             
@@ -182,6 +184,7 @@ class DataStore {
             foodName: foodName,
             dateFrozen: dateFrozen,
             notes: entity.notes,
+            bestBeforeDate: entity.bestBeforeDate,
             isCleared: entity.isCleared,
             createdAt: createdAt,
             updatedAt: updatedAt

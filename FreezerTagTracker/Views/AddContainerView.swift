@@ -7,9 +7,17 @@ struct AddContainerView: View {
     @State private var foodName = ""
     @State private var dateFrozen = Date()
     @State private var notes = ""
+    @State private var bestBeforeDate: Date?
+    @State private var hasBestBeforeDate = false
     @State private var showingValidationError = false
     @State private var validationMessage = ""
     @State private var isSaving = false
+    @FocusState private var focusedField: Field?
+    
+    enum Field {
+        case foodName
+        case notes
+    }
     
     private var isValid: Bool {
         !foodName.trimmingCharacters(in: .whitespaces).isEmpty && notes.count <= 200
@@ -24,10 +32,36 @@ struct AddContainerView: View {
             Section {
                 TextField("Food Name", text: $foodName)
                     .autocorrectionDisabled()
+                    .focused($focusedField, equals: .foodName)
                 
                 DatePicker("Date Frozen", selection: $dateFrozen, displayedComponents: .date)
             } header: {
                 Text("Container Information")
+            }
+            
+            Section {
+                Toggle("Set Best Before Date", isOn: $hasBestBeforeDate)
+                    .onChange(of: hasBestBeforeDate) { newValue in
+                        if newValue && bestBeforeDate == nil {
+                            bestBeforeDate = Calendar.current.date(byAdding: .month, value: 3, to: Date())
+                        } else if !newValue {
+                            bestBeforeDate = nil
+                        }
+                    }
+                
+                if hasBestBeforeDate, let _ = bestBeforeDate {
+                    DatePicker("Best Before Date", selection: Binding(
+                        get: { bestBeforeDate ?? Date() },
+                        set: { bestBeforeDate = $0 }
+                    ), displayedComponents: .date)
+                }
+            } header: {
+                Text("Best Before Date (Optional)")
+            } footer: {
+                if hasBestBeforeDate {
+                    Text("You'll be notified when the date approaches or passes")
+                        .font(.caption)
+                }
             }
             
             Section {
@@ -41,6 +75,7 @@ struct AddContainerView: View {
                     
                     TextEditor(text: $notes)
                         .frame(minHeight: 100)
+                        .focused($focusedField, equals: .notes)
                         .onChange(of: notes) { newValue in
                             if newValue.count > 200 {
                                 notes = String(newValue.prefix(200))
@@ -78,6 +113,12 @@ struct AddContainerView: View {
         .navigationTitle("Add Container")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("Done") {
+                    focusedField = nil
+                }
+            }
             ToolbarItem(placement: .cancellationAction) {
                 Button("Cancel") {
                     dismiss()
@@ -111,7 +152,8 @@ struct AddContainerView: View {
         viewModel.saveContainerWithNFC(
             foodName: trimmedFoodName,
             dateFrozen: dateFrozen,
-            notes: notes.isEmpty ? nil : notes
+            notes: notes.isEmpty ? nil : notes,
+            bestBeforeDate: hasBestBeforeDate ? bestBeforeDate : nil
         ) { result in
             isSaving = false
             

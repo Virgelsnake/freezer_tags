@@ -36,6 +36,34 @@ struct ContainerDetailView: View {
                         Text(container.daysFrozenDescription)
                             .font(.subheadline)
                     }
+                    
+                    if let formattedDate = container.formattedBestBeforeDate {
+                        Divider()
+                        
+                        HStack {
+                            Image(systemName: bestBeforeIcon)
+                                .foregroundStyle(bestBeforeColor)
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Best Before")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                Text(formattedDate)
+                                    .font(.subheadline)
+                                    .fontWeight(.medium)
+                                    .foregroundStyle(bestBeforeColor)
+                            }
+                            
+                            Spacer()
+                            
+                            if container.bestBeforeStatus != .fresh {
+                                bestBeforeStatusBadge
+                            }
+                        }
+                        .padding(.vertical, 4)
+                        .padding(.horizontal, 8)
+                        .background(bestBeforeBackgroundColor)
+                        .cornerRadius(8)
+                    }
                 }
                 .padding(.vertical, 8)
             }
@@ -107,6 +135,69 @@ struct ContainerDetailView: View {
             case .failure:
                 dismiss()
             }
+        }
+    }
+    
+    private var bestBeforeColor: Color {
+        switch container.bestBeforeStatus {
+        case .none, .fresh:
+            return .secondary
+        case .approaching:
+            return .orange
+        case .expired:
+            return .red
+        }
+    }
+    
+    private var bestBeforeBackgroundColor: Color {
+        switch container.bestBeforeStatus {
+        case .none, .fresh:
+            return Color.clear
+        case .approaching:
+            return Color.orange.opacity(0.1)
+        case .expired:
+            return Color.red.opacity(0.1)
+        }
+    }
+    
+    private var bestBeforeIcon: String {
+        switch container.bestBeforeStatus {
+        case .none, .fresh:
+            return "calendar.badge.checkmark"
+        case .approaching:
+            return "exclamationmark.triangle.fill"
+        case .expired:
+            return "xmark.circle.fill"
+        }
+    }
+    
+    @ViewBuilder
+    private var bestBeforeStatusBadge: some View {
+        switch container.bestBeforeStatus {
+        case .approaching:
+            if let days = container.daysUntilBestBefore {
+                Text("\(days)d left")
+                    .font(.caption2)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Color.orange)
+                    .cornerRadius(12)
+            }
+        case .expired:
+            if let days = container.daysUntilBestBefore {
+                Text("\(abs(days))d ago")
+                    .font(.caption2)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Color.red)
+                    .cornerRadius(12)
+            }
+        default:
+            EmptyView()
         }
     }
 }

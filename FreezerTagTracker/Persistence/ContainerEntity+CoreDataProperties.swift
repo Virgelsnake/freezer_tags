@@ -11,6 +11,7 @@ extension ContainerEntity {
     @NSManaged public var foodName: String?
     @NSManaged public var dateFrozen: Date?
     @NSManaged public var notes: String?
+    @NSManaged public var bestBeforeDate: Date?
     @NSManaged public var isCleared: Bool
     @NSManaged public var createdAt: Date?
     @NSManaged public var updatedAt: Date?

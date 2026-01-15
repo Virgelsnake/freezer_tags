@@ -25,13 +25,15 @@ class ContainerViewModel: ObservableObject {
         foodName: String,
         dateFrozen: Date,
         notes: String?,
+        bestBeforeDate: Date? = nil,
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
         let record = ContainerRecord(
             tagID: tagID,
             foodName: foodName,
             dateFrozen: dateFrozen,
-            notes: notes
+            notes: notes,
+            bestBeforeDate: bestBeforeDate
         )
         
         guard record.isValid else {
@@ -52,8 +54,11 @@ class ContainerViewModel: ObservableObject {
         foodName: String,
         dateFrozen: Date,
         notes: String?,
+        bestBeforeDate: Date? = nil,
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
+        print("🔵 ViewModel: saveContainerWithNFC called")
+        print("🔵 ViewModel: foodName=\(foodName), bestBeforeDate=\(String(describing: bestBeforeDate))")
         setLoading(true)
         
         let tagID = UUID().uuidString
@@ -61,16 +66,22 @@ class ContainerViewModel: ObservableObject {
             tagID: tagID,
             foodName: foodName,
             dateFrozen: dateFrozen,
-            notes: notes
+            notes: notes,
+            bestBeforeDate: bestBeforeDate
         )
         
+        print("🔵 ViewModel: Created record with tagID=\(tagID)")
+        
         guard record.isValid else {
+            print("❌ ViewModel: Record validation failed")
             setLoading(false)
             completion(.failure(DataStoreError.saveFailed(NSError(domain: "Validation", code: 1, userInfo: [NSLocalizedDescriptionKey: "Invalid container data"]))))
             return
         }
         
+        print("✅ ViewModel: Record is valid, calling nfcManager.writeTag")
         nfcManager.writeTag(record: record) { [weak self] result in
+            print("🔵 ViewModel: writeTag callback received with result: \(result)")
             guard let self = self else { return }
             
             DispatchQueue.main.async {

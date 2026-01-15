@@ -1,11 +1,19 @@
 import Foundation
 
+enum BestBeforeStatus: String, Codable {
+    case none
+    case fresh
+    case approaching
+    case expired
+}
+
 struct ContainerRecord: Identifiable, Codable, Hashable {
     let id: UUID
     let tagID: String
     var foodName: String
     var dateFrozen: Date
     var notes: String?
+    var bestBeforeDate: Date?
     var isCleared: Bool
     let createdAt: Date
     var updatedAt: Date
@@ -16,6 +24,7 @@ struct ContainerRecord: Identifiable, Codable, Hashable {
         foodName: String,
         dateFrozen: Date,
         notes: String? = nil,
+        bestBeforeDate: Date? = nil,
         isCleared: Bool = false,
         createdAt: Date = Date(),
         updatedAt: Date = Date()
@@ -25,6 +34,7 @@ struct ContainerRecord: Identifiable, Codable, Hashable {
         self.foodName = foodName
         self.dateFrozen = dateFrozen
         self.notes = notes
+        self.bestBeforeDate = bestBeforeDate
         self.isCleared = isCleared
         self.createdAt = createdAt
         self.updatedAt = updatedAt
@@ -63,6 +73,41 @@ struct ContainerRecord: Identifiable, Codable, Hashable {
             return "1 day ago"
         } else {
             return "\(days) days ago"
+        }
+    }
+    
+    var formattedBestBeforeDate: String? {
+        guard let bestBeforeDate = bestBeforeDate else {
+            return nil
+        }
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .none
+        return formatter.string(from: bestBeforeDate)
+    }
+    
+    var daysUntilBestBefore: Int? {
+        guard let bestBeforeDate = bestBeforeDate else {
+            return nil
+        }
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        let targetDate = calendar.startOfDay(for: bestBeforeDate)
+        let components = calendar.dateComponents([.day], from: today, to: targetDate)
+        return components.day ?? 0
+    }
+    
+    var bestBeforeStatus: BestBeforeStatus {
+        guard let daysUntil = daysUntilBestBefore else {
+            return .none
+        }
+        
+        if daysUntil < 0 {
+            return .expired
+        } else if daysUntil <= 7 {
+            return .approaching
+        } else {
+            return .fresh
         }
     }
 }
