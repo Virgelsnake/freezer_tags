@@ -1,11 +1,16 @@
 import SwiftUI
 
 struct ContainerDetailView: View {
-    let container: ContainerRecord
+    let initialContainer: ContainerRecord
     @ObservedObject var viewModel: ContainerViewModel
     @Environment(\.dismiss) private var dismiss
     @State private var showingClearConfirmation = false
     @State private var isClearing = false
+    @State private var showingEditView = false
+    
+    private var container: ContainerRecord {
+        viewModel.containers.first { $0.id == initialContainer.id } ?? initialContainer
+    }
     
     var body: some View {
         List {
@@ -101,11 +106,17 @@ struct ContainerDetailView: View {
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Menu {
-                    NavigationLink(destination: EditContainerView(container: container, viewModel: viewModel)) {
+                    Button(action: {
+                        print("🟠 ContainerDetailView: Edit button tapped")
+                        showingEditView = true
+                    }) {
                         Label("Edit", systemImage: "pencil")
                     }
                     
-                    Button(role: .destructive, action: { showingClearConfirmation = true }) {
+                    Button(role: .destructive, action: { 
+                        print("🟠 ContainerDetailView: Clear & Reuse button tapped")
+                        showingClearConfirmation = true 
+                    }) {
                         Label("Clear & Reuse", systemImage: "trash")
                     }
                 } label: {
@@ -113,6 +124,15 @@ struct ContainerDetailView: View {
                 }
             }
         }
+        .background(
+            NavigationLink(
+                destination: EditContainerView(container: initialContainer, viewModel: viewModel),
+                isActive: $showingEditView
+            ) {
+                EmptyView()
+            }
+            .hidden()
+        )
         .confirmationDialog("Clear Container", isPresented: $showingClearConfirmation) {
             Button("Clear & Reuse", role: .destructive) {
                 clearContainer()
@@ -126,7 +146,7 @@ struct ContainerDetailView: View {
     private func clearContainer() {
         isClearing = true
         
-        viewModel.clearContainer(tagID: container.tagID) { result in
+        viewModel.clearContainer(tagID: initialContainer.tagID) { result in
             isClearing = false
             
             switch result {
@@ -205,7 +225,7 @@ struct ContainerDetailView: View {
 #Preview {
     NavigationView {
         ContainerDetailView(
-            container: ContainerRecord(
+            initialContainer: ContainerRecord(
                 tagID: "test-tag-123",
                 foodName: "Chicken Soup",
                 dateFrozen: Calendar.current.date(byAdding: .day, value: -3, to: Date())!,

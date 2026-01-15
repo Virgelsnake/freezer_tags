@@ -120,7 +120,7 @@ struct HomeView: View {
         }) {
             if let container = scannedContainer {
                 NavigationView {
-                    ContainerDetailView(container: container, viewModel: viewModel)
+                    ContainerDetailView(initialContainer: container, viewModel: viewModel)
                         .onAppear {
                             print("⏱️ HomeView TIMING: ContainerDetailView appeared")
                         }

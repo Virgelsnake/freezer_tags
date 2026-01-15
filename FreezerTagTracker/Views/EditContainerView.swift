@@ -138,23 +138,31 @@ struct EditContainerView: View {
         } message: {
             Text(validationMessage)
         }
+        .onAppear {
+            print("🟡 EditContainerView: onAppear - editing container: \(container.foodName)")
+            print("🟡 EditContainerView: isValid=\(isValid), hasChanges=\(hasChanges)")
+        }
     }
     
     private func saveChanges() {
+        print("🟡 EditContainerView: saveChanges() called")
         let trimmedFoodName = foodName.trimmingCharacters(in: .whitespaces)
         
         guard !trimmedFoodName.isEmpty else {
+            print("❌ EditContainerView: Validation failed - empty food name")
             validationMessage = "Please enter a food name"
             showingValidationError = true
             return
         }
         
         guard notes.count <= 200 else {
+            print("❌ EditContainerView: Validation failed - notes too long")
             validationMessage = "Notes must be 200 characters or less"
             showingValidationError = true
             return
         }
         
+        print("🟡 EditContainerView: Validation passed, setting isSaving=true")
         isSaving = true
         
         var updatedRecord = container
@@ -163,13 +171,17 @@ struct EditContainerView: View {
         updatedRecord.notes = notes.isEmpty ? nil : notes
         updatedRecord.bestBeforeDate = hasBestBeforeDate ? bestBeforeDate : nil
         
+        print("🟡 EditContainerView: Calling viewModel.updateContainer with id=\(updatedRecord.id), foodName=\(trimmedFoodName)")
         viewModel.updateContainer(record: updatedRecord) { result in
+            print("🟡 EditContainerView: updateContainer callback received")
             isSaving = false
             
             switch result {
             case .success:
+                print("✅ EditContainerView: Update succeeded, dismissing")
                 dismiss()
             case .failure(let error):
+                print("❌ EditContainerView: Update failed - \(error.localizedDescription)")
                 validationMessage = error.localizedDescription
                 showingValidationError = true
             }

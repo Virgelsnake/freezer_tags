@@ -146,16 +146,21 @@ class ContainerViewModel: ObservableObject {
     }
     
     func updateContainer(record: ContainerRecord, completion: @escaping (Result<Void, Error>) -> Void) {
+        print("🔵 ViewModel: updateContainer called with id=\(record.id), foodName=\(record.foodName)")
         guard record.isValid else {
+            print("❌ ViewModel: Record validation failed - isValid=false")
             completion(.failure(DataStoreError.updateFailed(NSError(domain: "Validation", code: 1, userInfo: [NSLocalizedDescriptionKey: "Invalid container data"]))))
             return
         }
         
+        print("🔵 ViewModel: Record is valid, calling dataStore.update")
         do {
             try dataStore.update(record: record)
+            print("✅ ViewModel: dataStore.update succeeded, reloading containers")
             loadContainers()
             completion(.success(()))
         } catch {
+            print("❌ ViewModel: dataStore.update failed - \(error.localizedDescription)")
             completion(.failure(error))
         }
     }

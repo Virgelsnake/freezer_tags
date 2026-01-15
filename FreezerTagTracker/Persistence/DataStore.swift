@@ -101,16 +101,20 @@ class DataStore {
     }
     
     func update(record: ContainerRecord) throws {
+        print("💾 DataStore: update() called with id=\(record.id), foodName=\(record.foodName)")
         let fetchRequest: NSFetchRequest<ContainerEntity> = ContainerEntity.fetchRequest()
         fetchRequest.predicate = NSPredicate(format: "id == %@", record.id as CVarArg)
         fetchRequest.fetchLimit = 1
         
         do {
             let results = try context.fetch(fetchRequest)
+            print("💾 DataStore: Fetch returned \(results.count) results")
             guard let entity = results.first else {
+                print("❌ DataStore: No entity found for id=\(record.id)")
                 throw DataStoreError.recordNotFound
             }
             
+            print("💾 DataStore: Found entity, updating fields")
             entity.foodName = record.foodName
             entity.dateFrozen = record.dateFrozen
             entity.notes = record.notes
@@ -119,9 +123,12 @@ class DataStore {
             entity.updatedAt = Date()
             
             try context.save()
+            print("✅ DataStore: context.save() succeeded")
         } catch let error as DataStoreError {
+            print("❌ DataStore: Update failed with DataStoreError - \(error)")
             throw error
         } catch {
+            print("❌ DataStore: Update failed - \(error.localizedDescription)")
             throw DataStoreError.updateFailed(error)
         }
     }
