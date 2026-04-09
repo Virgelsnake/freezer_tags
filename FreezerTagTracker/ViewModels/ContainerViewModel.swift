@@ -9,17 +9,28 @@ class ContainerViewModel: ObservableObject {
     
     private let dataStore: DataStore
     private let nfcManager: NFCManager
+    private let addContainerTagWriter: TagWriting
+    private let addContainerSettingsStore: AddContainerSettingsProviding
     
-    init(dataStore: DataStore = .shared, nfcManager: NFCManager = .shared) {
+    init(
+        dataStore: DataStore = .shared,
+        nfcManager: NFCManager = .shared,
+        addContainerTagWriter: TagWriting? = nil,
+        addContainerSettingsStore: AddContainerSettingsProviding = AddContainerSettingsStore()
+    ) {
         self.dataStore = dataStore
         self.nfcManager = nfcManager
+        self.addContainerTagWriter = addContainerTagWriter ?? nfcManager
+        self.addContainerSettingsStore = addContainerSettingsStore
         loadContainers()
     }
 
     func makeAddContainerFlowViewModel(draft: AddContainerDraft = AddContainerDraft()) -> AddContainerFlowViewModel {
         AddContainerFlowViewModel(
             draft: draft,
-            tagWriter: nfcManager,
+            presetProvider: addContainerSettingsStore,
+            settingsStore: addContainerSettingsStore,
+            tagWriter: addContainerTagWriter,
             recordStore: dataStore
         )
     }

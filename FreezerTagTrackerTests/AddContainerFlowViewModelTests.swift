@@ -394,6 +394,37 @@ final class AddContainerFlowViewModelTests: XCTestCase {
         XCTAssertEqual(haptics.events, [])
     }
 
+    func testWriteToTagSkipsGuidanceAndHapticsWhenSettingsDisableThem() {
+        let speech = RecordingSpokenFeedbackService()
+        let announcements = RecordingAccessibilityAnnouncementService()
+        let haptics = RecordingHapticsService()
+        let writer = RecordingTagWriter(results: [.success(())])
+        let settingsStore = InMemoryAddContainerSettingsStore(
+            settings: AddContainerSettings(
+                spokenGuidanceEnabled: false,
+                spokenConfirmationsEnabled: false,
+                hapticsEnabled: false
+            )
+        )
+        let viewModel = makeViewModel(
+            draft: AddContainerDraft(foodName: "Lentil soup"),
+            tagWriter: writer,
+            recordStore: RecordingRecordStore(),
+            settingsStore: settingsStore,
+            spokenFeedbackService: speech,
+            accessibilityAnnouncementService: announcements,
+            hapticsService: haptics
+        )
+
+        viewModel.goToReview()
+        viewModel.writeToTag()
+
+        XCTAssertEqual(viewModel.step, .success)
+        XCTAssertEqual(speech.messages, [])
+        XCTAssertEqual(announcements.messages, [])
+        XCTAssertEqual(haptics.events, [])
+    }
+
     private func makeViewModel(
         draft: AddContainerDraft,
         tagWriter: RecordingTagWriter,

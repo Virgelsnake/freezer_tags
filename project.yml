@@ -67,3 +67,19 @@ targets:
         SWIFT_VERSION: "5.9"
         TARGETED_DEVICE_FAMILY: "1"
         IPHONEOS_DEPLOYMENT_TARGET: "15.0"
+
+  FreezerTagTrackerUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - FreezerTagTrackerUITests
+    dependencies:
+      - target: FreezerTagTracker
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.freezertagtracker.FreezerTagTrackerUITests
+        INFOPLIST_FILE: FreezerTagTrackerUITests/Info.plist
+        SWIFT_VERSION: "5.9"
+        TARGETED_DEVICE_FAMILY: "1"
+        IPHONEOS_DEPLOYMENT_TARGET: "15.0"
+        TEST_TARGET_NAME: FreezerTagTracker

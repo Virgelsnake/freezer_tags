@@ -21,6 +21,9 @@ struct AddContainerReviewView: View {
                         .font(.body)
                         .foregroundStyle(Color.secondary)
                 }
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("Step 2 of 2. Review and write. Check these details, then hold your iPhone near the tag.")
+                .accessibilitySortPriority(3)
 
                 VStack(alignment: .leading, spacing: 12) {
                     Text("What will be saved")
@@ -28,6 +31,8 @@ struct AddContainerReviewView: View {
 
                     ContainerSummaryCard(items: draft.summaryItems())
                 }
+                .accessibilityElement(children: .contain)
+                .accessibilitySortPriority(2)
 
                 VStack(alignment: .leading, spacing: 14) {
                     Button(action: onWrite) {
@@ -45,16 +50,21 @@ struct AddContainerReviewView: View {
                     .buttonStyle(ReviewPrimaryActionButtonStyle())
                     .disabled(isSubmitting)
                     .accessibilityHint("Starts the tag writing step.")
+                    .accessibilityIdentifier("addContainer.writeButton")
 
                     Button("Go back and change", action: onGoBack)
                         .font(.body.weight(.semibold))
                         .foregroundStyle(Color.secondary)
                         .frame(maxWidth: .infinity, alignment: .center)
                         .accessibilityHint("Returns to the previous screen to edit the details.")
+                        .accessibilityIdentifier("addContainer.goBackAndChangeButton")
                 }
+                .accessibilityElement(children: .contain)
+                .accessibilitySortPriority(1)
             }
             .padding(20)
         }
+        .accessibilityIdentifier("addContainer.review.screen")
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
         .navigationBarBackButtonHidden(true)
     }

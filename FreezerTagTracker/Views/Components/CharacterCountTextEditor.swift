@@ -35,6 +35,10 @@ struct CharacterCountTextEditor: View {
                     .padding(.vertical, 10)
                     .frame(minHeight: 132)
                     .focused($isFocused)
+                    .accessibilityLabel(title)
+                    .accessibilityValue(text.isEmpty ? "Empty" : text)
+                    .accessibilityHint("Optional. Up to \(characterLimit) characters.")
+                    .accessibilityIdentifier("addContainer.notesEditor")
                     .onChange(of: text) { newValue in
                         guard newValue.count > characterLimit else {
                             return

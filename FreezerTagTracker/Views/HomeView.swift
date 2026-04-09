@@ -2,13 +2,22 @@ import SwiftUI
 import Combine
 
 struct HomeView: View {
-    @StateObject private var viewModel = ContainerViewModel()
+    @StateObject private var viewModel: ContainerViewModel
     @StateObject private var nfcManager = NFCManager.shared
     @State private var showScanSheet = false
     @State private var scannedContainer: ContainerRecord?
     @State private var showContainerDetail = false
     @State private var waitingForNFCDismissal = false
     @State private var showSettings = false
+    private let settingsViewModelFactory: () -> SettingsViewModel
+
+    init(
+        viewModel: ContainerViewModel = ContainerViewModel(),
+        settingsViewModelFactory: @escaping () -> SettingsViewModel = { SettingsViewModel() }
+    ) {
+        _viewModel = StateObject(wrappedValue: viewModel)
+        self.settingsViewModelFactory = settingsViewModelFactory
+    }
     
     var body: some View {
         NavigationView {
@@ -49,6 +58,7 @@ struct HomeView: View {
                         .foregroundStyle(.white)
                         .cornerRadius(12)
                     }
+                    .accessibilityIdentifier("home.addContainer")
                     
                     Button(action: {
                         print("⏱️ HomeView: Scan Container button tapped")
@@ -82,6 +92,7 @@ struct HomeView: View {
                         Image(systemName: "gearshape.fill")
                     }
                     .accessibilityLabel("Settings")
+                    .accessibilityIdentifier("home.settings")
                 }
             }
             .sheet(isPresented: $showScanSheet) {
@@ -102,7 +113,7 @@ struct HomeView: View {
             }
             .sheet(isPresented: $showSettings) {
                 NavigationView {
-                    SettingsView()
+                    SettingsView(viewModel: settingsViewModelFactory())
                 }
             }
         }

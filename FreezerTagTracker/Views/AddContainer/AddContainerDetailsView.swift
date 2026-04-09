@@ -33,6 +33,7 @@ struct AddContainerDetailsView: View {
             }
             .padding(20)
         }
+        .accessibilityIdentifier("addContainer.details.screen")
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
         .navigationBarBackButtonHidden(true)
         .sheet(item: $activePicker) { picker in
@@ -68,6 +69,9 @@ struct AddContainerDetailsView: View {
                 .font(.body)
                 .foregroundStyle(Color.secondary)
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Step 1 of 2. Add a container. Tell us what you are freezing, then we will help you write it to the tag.")
+        .accessibilitySortPriority(6)
     }
 
     private var foodNameSection: some View {
@@ -101,6 +105,8 @@ struct AddContainerDetailsView: View {
                     .foregroundStyle(Color.secondary)
             }
         }
+        .accessibilityElement(children: .contain)
+        .accessibilitySortPriority(5)
     }
 
     private var foodNameField: some View {
@@ -128,6 +134,7 @@ struct AddContainerDetailsView: View {
         .accessibilityLabel("Food name")
         .accessibilityValue(viewModel.draft.foodName.isEmpty ? "Empty" : viewModel.draft.foodName)
         .accessibilityHint("Required text field. Double tap to type or use dictation.")
+        .accessibilityIdentifier("addContainer.foodNameField")
     }
 
     private func microphoneButton(maxWidth: Bool) -> some View {
@@ -149,6 +156,7 @@ struct AddContainerDetailsView: View {
         }
         .buttonStyle(.plain)
         .accessibilityHint("Double tap to dictate the name of the food.")
+        .accessibilityIdentifier("addContainer.microphoneButton")
     }
 
     private var presetSection: some View {
@@ -165,7 +173,8 @@ struct AddContainerDetailsView: View {
                     ForEach(viewModel.availablePresets, id: \.category) { preset in
                         FoodPresetButton(
                             title: preset.displayName,
-                            isSelected: viewModel.draft.foodCategory == preset.category
+                            isSelected: viewModel.draft.foodCategory == preset.category,
+                            accessibilityIdentifier: "addContainer.preset.\(preset.category.rawValue)"
                         ) {
                             viewModel.selectPreset(preset.category)
                             if let bestQualityDate = viewModel.draft.bestQualityDate {
@@ -183,7 +192,8 @@ struct AddContainerDetailsView: View {
                     ForEach(viewModel.availablePresets, id: \.category) { preset in
                         FoodPresetButton(
                             title: preset.displayName,
-                            isSelected: viewModel.draft.foodCategory == preset.category
+                            isSelected: viewModel.draft.foodCategory == preset.category,
+                            accessibilityIdentifier: "addContainer.preset.\(preset.category.rawValue)"
                         ) {
                             viewModel.selectPreset(preset.category)
                             if let bestQualityDate = viewModel.draft.bestQualityDate {
@@ -200,6 +210,8 @@ struct AddContainerDetailsView: View {
                     .foregroundStyle(Color.blue)
             }
         }
+        .accessibilityElement(children: .contain)
+        .accessibilitySortPriority(4)
     }
 
     private var dateSection: some View {
@@ -222,6 +234,8 @@ struct AddContainerDetailsView: View {
                 activePicker = .bestQuality
             }
         }
+        .accessibilityElement(children: .contain)
+        .accessibilitySortPriority(3)
     }
 
     private var notesSection: some View {
@@ -234,6 +248,7 @@ struct AddContainerDetailsView: View {
             placeholder: "Optional notes",
             characterLimit: 200
         )
+        .accessibilitySortPriority(2)
     }
 
     private var actionSection: some View {
@@ -253,12 +268,17 @@ struct AddContainerDetailsView: View {
                     ? "Moves to the final review screen before writing to the tag."
                     : "Disabled. Food name is required."
             )
+            .accessibilityIdentifier("addContainer.reviewButton")
 
             Button("Cancel", action: onCancel)
                 .font(.body.weight(.semibold))
                 .foregroundStyle(Color.secondary)
                 .frame(maxWidth: .infinity, alignment: .center)
+                .accessibilityHint("Closes the add-container flow without saving.")
+                .accessibilityIdentifier("addContainer.cancelButton")
         }
+        .accessibilityElement(children: .contain)
+        .accessibilitySortPriority(1)
     }
 
     private func datePickerSheet(

@@ -35,4 +35,20 @@ final class BestQualityDateCalculatorTests: XCTestCase {
 
         XCTAssertEqual(calculator.presetDescription(for: .preparedMeal), store.preset(for: .preparedMeal).suggestionCopy)
     }
+
+    func testSuggestedDateUsesSavedPresetOverrideWhenPresent() {
+        let calendar = Calendar(identifier: .gregorian)
+        let frozenOn = calendar.date(from: DateComponents(year: 2026, month: 4, day: 9))!
+        let userDefaults = UserDefaults(suiteName: #function)!
+        userDefaults.removePersistentDomain(forName: #function)
+
+        let store = AddContainerSettingsStore(userDefaults: userDefaults)
+        store.save(AddContainerSettings(presetOverrides: [.beef: 6]))
+        let calculator = BestQualityDateCalculator(presetProvider: store)
+
+        XCTAssertEqual(
+            calculator.suggestedDate(for: .beef, frozenOn: frozenOn),
+            calendar.date(byAdding: .month, value: 6, to: frozenOn)
+        )
+    }
 }
