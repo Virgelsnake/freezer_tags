@@ -23,6 +23,7 @@ class ContainerViewModel: ObservableObject {
     func saveContainer(
         tagID: String,
         foodName: String,
+        foodCategory: FoodCategory? = nil,
         dateFrozen: Date,
         notes: String?,
         bestBeforeDate: Date? = nil,
@@ -31,6 +32,7 @@ class ContainerViewModel: ObservableObject {
         let record = ContainerRecord(
             tagID: tagID,
             foodName: foodName,
+            foodCategory: foodCategory,
             dateFrozen: dateFrozen,
             notes: notes,
             bestBeforeDate: bestBeforeDate
@@ -52,6 +54,7 @@ class ContainerViewModel: ObservableObject {
     
     func saveContainerWithNFC(
         foodName: String,
+        foodCategory: FoodCategory? = nil,
         dateFrozen: Date,
         notes: String?,
         bestBeforeDate: Date? = nil,
@@ -65,6 +68,7 @@ class ContainerViewModel: ObservableObject {
         let record = ContainerRecord(
             tagID: tagID,
             foodName: foodName,
+            foodCategory: foodCategory,
             dateFrozen: dateFrozen,
             notes: notes,
             bestBeforeDate: bestBeforeDate

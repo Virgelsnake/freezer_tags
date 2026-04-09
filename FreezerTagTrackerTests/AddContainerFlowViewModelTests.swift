@@ -107,4 +107,29 @@ final class AddContainerFlowViewModelTests: XCTestCase {
         XCTAssertEqual(viewModel.step, .details)
         XCTAssertNil(viewModel.validationMessage)
     }
+
+    func testPresetStatusMessageIsNilWithoutSelection() {
+        let viewModel = AddContainerFlowViewModel()
+
+        XCTAssertNil(viewModel.presetStatusMessage)
+    }
+
+    func testPresetStatusMessageUsesApprovedCopyAfterPresetSelection() {
+        let viewModel = AddContainerFlowViewModel()
+
+        viewModel.selectPreset(.beef)
+
+        XCTAssertEqual(viewModel.presetStatusMessage, "Best-quality date added from USDA guidance.")
+    }
+
+    func testPresetStatusMessageChangesAfterManualDateEdit() {
+        let calendar = Calendar(identifier: .gregorian)
+        let manualDate = calendar.date(from: DateComponents(year: 2026, month: 12, day: 25))!
+        let viewModel = AddContainerFlowViewModel()
+
+        viewModel.selectPreset(.poultry)
+        viewModel.updateBestQualityDate(manualDate)
+
+        XCTAssertEqual(viewModel.presetStatusMessage, "Date changed")
+    }
 }

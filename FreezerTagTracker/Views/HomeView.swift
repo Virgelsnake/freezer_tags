@@ -33,7 +33,9 @@ struct HomeView: View {
                 Spacer()
                 
                 VStack(spacing: 20) {
-                    NavigationLink(destination: AddContainerView(viewModel: viewModel)) {
+                    NavigationLink {
+                        AddContainerView(viewModel: viewModel)
+                    } label: {
                         HStack {
                             Image(systemName: "plus.circle.fill")
                                 .font(.title2)

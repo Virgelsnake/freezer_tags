@@ -27,6 +27,22 @@ final class AddContainerFlowViewModel: ObservableObject {
         draft.canProceedToReview
     }
 
+    var presetStatusMessage: String? {
+        guard draft.foodCategory != nil else {
+            return nil
+        }
+
+        if draft.isBestQualityDateManuallyEdited {
+            return "Date changed"
+        }
+
+        guard draft.bestQualityDate != nil else {
+            return nil
+        }
+
+        return "Best-quality date added from USDA guidance."
+    }
+
     func updateFoodName(_ foodName: String) {
         draft.foodName = foodName
 
