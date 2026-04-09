@@ -191,6 +191,24 @@ final class ContainerRecordTests: XCTestCase {
         XCTAssertEqual(record.notes, decodedRecord.notes)
         XCTAssertEqual(record.isCleared, decodedRecord.isCleared)
     }
+
+    func testCodableConformancePreservesFoodCategory() throws {
+        let record = ContainerRecord(
+            tagID: "test-tag",
+            foodName: "Beef Stew",
+            foodCategory: .beef,
+            dateFrozen: Date(),
+            notes: nil
+        )
+
+        let encoder = JSONEncoder()
+        let data = try encoder.encode(record)
+
+        let decoder = JSONDecoder()
+        let decodedRecord = try decoder.decode(ContainerRecord.self, from: data)
+
+        XCTAssertEqual(decodedRecord.foodCategory, FoodCategory.beef)
+    }
     
     func testHashableConformance() throws {
         let tagID = "test-tag"

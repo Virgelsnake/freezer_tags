@@ -37,10 +37,19 @@ class DataStore {
                 throw DataStoreError.duplicateTagID
             }
             
-            let entity = ContainerEntity(context: context)
+            guard let entityDescription = NSEntityDescription.entity(forEntityName: "ContainerEntity", in: context) else {
+                throw DataStoreError.saveFailed(NSError(
+                    domain: "DataStore",
+                    code: 2,
+                    userInfo: [NSLocalizedDescriptionKey: "ContainerEntity description could not be loaded."]
+                ))
+            }
+
+            let entity = ContainerEntity(entity: entityDescription, insertInto: context)
             entity.id = record.id
             entity.tagID = record.tagID
             entity.foodName = record.foodName
+            entity.foodCategory = record.foodCategory?.rawValue
             entity.dateFrozen = record.dateFrozen
             entity.notes = record.notes
             entity.bestBeforeDate = record.bestBeforeDate
@@ -116,6 +125,7 @@ class DataStore {
             
             print("💾 DataStore: Found entity, updating fields")
             entity.foodName = record.foodName
+            entity.foodCategory = record.foodCategory?.rawValue
             entity.dateFrozen = record.dateFrozen
             entity.notes = record.notes
             entity.bestBeforeDate = record.bestBeforeDate
@@ -189,6 +199,7 @@ class DataStore {
             id: id,
             tagID: tagID,
             foodName: foodName,
+            foodCategory: entity.foodCategory.flatMap(FoodCategory.init(rawValue:)),
             dateFrozen: dateFrozen,
             notes: entity.notes,
             bestBeforeDate: entity.bestBeforeDate,

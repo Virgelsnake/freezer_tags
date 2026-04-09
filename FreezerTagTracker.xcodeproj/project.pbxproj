@@ -7,6 +7,18 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0A6A5D381122334455667701 /* AddContainerDraft.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A6A5D381122334455667700 /* AddContainerDraft.swift */; };
+		0A6A5D38112233445566770B /* AddContainerSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A6A5D38112233445566770A /* AddContainerSettings.swift */; };
+		0A6A5D381122334455667703 /* AddContainerStep.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A6A5D381122334455667702 /* AddContainerStep.swift */; };
+		0A6A5D381122334455667705 /* AddContainerFlowViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A6A5D381122334455667704 /* AddContainerFlowViewModel.swift */; };
+		0A6A5D381122334455667707 /* AddContainerFlowViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A6A5D381122334455667706 /* AddContainerFlowViewModelTests.swift */; };
+		0A6A5D381122334455667709 /* FoodCategory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A6A5D381122334455667708 /* FoodCategory.swift */; };
+		0A6A5D38112233445566770D /* FoodCategoryPreset.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A6A5D38112233445566770C /* FoodCategoryPreset.swift */; };
+		0A6A5D38112233445566770F /* AddContainerSettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A6A5D38112233445566770E /* AddContainerSettingsStore.swift */; };
+		0A6A5D381122334455667711 /* AddContainerSettingsStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A6A5D381122334455667710 /* AddContainerSettingsStoreTests.swift */; };
+		0A6A5D381122334455667713 /* TagWriteResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A6A5D381122334455667712 /* TagWriteResult.swift */; };
+		0A6A5D381122334455667715 /* BestQualityDateCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A6A5D381122334455667714 /* BestQualityDateCalculator.swift */; };
+		0A6A5D381122334455667717 /* BestQualityDateCalculatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A6A5D381122334455667716 /* BestQualityDateCalculatorTests.swift */; };
 		00A40DE005722894D180AC10 /* DataStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBA25721E07231E356DAB6A9 /* DataStore.swift */; };
 		159A660154D75A483DB5FB90 /* ContainerEntity+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 154D6E3057CD8E3485719C9E /* ContainerEntity+CoreDataClass.swift */; };
 		1C85B45039763A65A8B2AA06 /* FreezerTagTracker.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = E6B61CE690ADAB44D49E7739 /* FreezerTagTracker.xcdatamodeld */; };
@@ -41,6 +53,18 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		0A6A5D381122334455667700 /* AddContainerDraft.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddContainerDraft.swift; sourceTree = "<group>"; };
+		0A6A5D38112233445566770A /* AddContainerSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddContainerSettings.swift; sourceTree = "<group>"; };
+		0A6A5D381122334455667702 /* AddContainerStep.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddContainerStep.swift; sourceTree = "<group>"; };
+		0A6A5D381122334455667704 /* AddContainerFlowViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddContainerFlowViewModel.swift; sourceTree = "<group>"; };
+		0A6A5D381122334455667706 /* AddContainerFlowViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddContainerFlowViewModelTests.swift; sourceTree = "<group>"; };
+		0A6A5D381122334455667708 /* FoodCategory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodCategory.swift; sourceTree = "<group>"; };
+		0A6A5D38112233445566770C /* FoodCategoryPreset.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodCategoryPreset.swift; sourceTree = "<group>"; };
+		0A6A5D38112233445566770E /* AddContainerSettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddContainerSettingsStore.swift; sourceTree = "<group>"; };
+		0A6A5D381122334455667710 /* AddContainerSettingsStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddContainerSettingsStoreTests.swift; sourceTree = "<group>"; };
+		0A6A5D381122334455667712 /* TagWriteResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagWriteResult.swift; sourceTree = "<group>"; };
+		0A6A5D381122334455667714 /* BestQualityDateCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BestQualityDateCalculator.swift; sourceTree = "<group>"; };
+		0A6A5D381122334455667716 /* BestQualityDateCalculatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BestQualityDateCalculatorTests.swift; sourceTree = "<group>"; };
 		04BCBBAC9FD84A6A2A83D0D3 /* EditContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditContainerView.swift; sourceTree = "<group>"; };
 		154D6E3057CD8E3485719C9E /* ContainerEntity+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ContainerEntity+CoreDataClass.swift"; sourceTree = "<group>"; };
 		16DEF2DF1438504573CE0793 /* NFCError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NFCError.swift; sourceTree = "<group>"; };
@@ -73,6 +97,7 @@
 		0C19138A5298C68E4738CE4A /* ViewModels */ = {
 			isa = PBXGroup;
 			children = (
+				0A6A5D381122334455667704 /* AddContainerFlowViewModel.swift */,
 				7B34A46A5B241F240C65113F /* ContainerViewModel.swift */,
 			);
 			path = ViewModels;
@@ -110,6 +135,12 @@
 		9104470D4A59BDEE42479A60 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				0A6A5D381122334455667700 /* AddContainerDraft.swift */,
+				0A6A5D38112233445566770A /* AddContainerSettings.swift */,
+				0A6A5D381122334455667702 /* AddContainerStep.swift */,
+				0A6A5D381122334455667708 /* FoodCategory.swift */,
+				0A6A5D38112233445566770C /* FoodCategoryPreset.swift */,
+				0A6A5D381122334455667712 /* TagWriteResult.swift */,
 				E458C7A14CFF1E0F17E2C1AD /* ContainerRecord.swift */,
 				16DEF2DF1438504573CE0793 /* NFCError.swift */,
 				C85145A8AC9E684364A632AC /* NFCManager.swift */,
@@ -120,6 +151,9 @@
 		B77B91882D5FEC3EAAF5255F /* FreezerTagTrackerTests */ = {
 			isa = PBXGroup;
 			children = (
+				0A6A5D381122334455667716 /* BestQualityDateCalculatorTests.swift */,
+				0A6A5D381122334455667710 /* AddContainerSettingsStoreTests.swift */,
+				0A6A5D381122334455667706 /* AddContainerFlowViewModelTests.swift */,
 				C36259D92D42BCF6773D77B9 /* ContainerRecordTests.swift */,
 				35A81B26B3EA7B7AC358EB11 /* ContainerViewModelTests.swift */,
 				61C0DEBEFF854EDD5DA9EF10 /* DataStoreTests.swift */,
@@ -132,6 +166,7 @@
 		D442A710319FA8CE386499C5 /* Persistence */ = {
 			isa = PBXGroup;
 			children = (
+				0A6A5D38112233445566770E /* AddContainerSettingsStore.swift */,
 				154D6E3057CD8E3485719C9E /* ContainerEntity+CoreDataClass.swift */,
 				1D95715940DDAC6E88647A24 /* ContainerEntity+CoreDataProperties.swift */,
 				DBA25721E07231E356DAB6A9 /* DataStore.swift */,
@@ -162,6 +197,7 @@
 	UTILITIES0001 /* Utilities */ = {
 		isa = PBXGroup;
 		children = (
+			0A6A5D381122334455667714 /* BestQualityDateCalculator.swift */,
 		);
 		path = Utilities;
 		sourceTree = "<group>";
@@ -249,6 +285,15 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0A6A5D381122334455667701 /* AddContainerDraft.swift in Sources */,
+				0A6A5D38112233445566770B /* AddContainerSettings.swift in Sources */,
+				0A6A5D381122334455667703 /* AddContainerStep.swift in Sources */,
+				0A6A5D381122334455667705 /* AddContainerFlowViewModel.swift in Sources */,
+				0A6A5D381122334455667709 /* FoodCategory.swift in Sources */,
+				0A6A5D38112233445566770D /* FoodCategoryPreset.swift in Sources */,
+				0A6A5D38112233445566770F /* AddContainerSettingsStore.swift in Sources */,
+				0A6A5D381122334455667713 /* TagWriteResult.swift in Sources */,
+				0A6A5D381122334455667715 /* BestQualityDateCalculator.swift in Sources */,
 				82A6EA192ED310D9814D7B92 /* AddContainerView.swift in Sources */,
 				E1A6FC02EF24144D2CAEFB0F /* ContainerDetailView.swift in Sources */,
 				159A660154D75A483DB5FB90 /* ContainerEntity+CoreDataClass.swift in Sources */,
@@ -272,6 +317,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0A6A5D381122334455667717 /* BestQualityDateCalculatorTests.swift in Sources */,
+				0A6A5D381122334455667711 /* AddContainerSettingsStoreTests.swift in Sources */,
+				0A6A5D381122334455667707 /* AddContainerFlowViewModelTests.swift in Sources */,
 				BBAFDA7CEEF4FE5BF444560B /* ContainerRecordTests.swift in Sources */,
 				2ECD3283CF326E631AFD7650 /* ContainerViewModelTests.swift in Sources */,
 				612F4033DC6EC7BA1DE04FEA /* DataStoreTests.swift in Sources */,

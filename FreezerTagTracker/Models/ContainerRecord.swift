@@ -11,6 +11,7 @@ struct ContainerRecord: Identifiable, Codable, Hashable {
     let id: UUID
     let tagID: String
     var foodName: String
+    var foodCategory: FoodCategory?
     var dateFrozen: Date
     var notes: String?
     var bestBeforeDate: Date?
@@ -22,6 +23,7 @@ struct ContainerRecord: Identifiable, Codable, Hashable {
         id: UUID = UUID(),
         tagID: String,
         foodName: String,
+        foodCategory: FoodCategory? = nil,
         dateFrozen: Date,
         notes: String? = nil,
         bestBeforeDate: Date? = nil,
@@ -32,6 +34,7 @@ struct ContainerRecord: Identifiable, Codable, Hashable {
         self.id = id
         self.tagID = tagID
         self.foodName = foodName
+        self.foodCategory = foodCategory
         self.dateFrozen = dateFrozen
         self.notes = notes
         self.bestBeforeDate = bestBeforeDate
