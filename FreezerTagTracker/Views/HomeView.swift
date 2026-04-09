@@ -8,6 +8,7 @@ struct HomeView: View {
     @State private var scannedContainer: ContainerRecord?
     @State private var showContainerDetail = false
     @State private var waitingForNFCDismissal = false
+    @State private var showSettings = false
     
     var body: some View {
         NavigationView {
@@ -73,6 +74,16 @@ struct HomeView: View {
             }
             .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        showSettings = true
+                    } label: {
+                        Image(systemName: "gearshape.fill")
+                    }
+                    .accessibilityLabel("Settings")
+                }
+            }
             .sheet(isPresented: $showScanSheet) {
                 ScanView(viewModel: viewModel) { container in
                     print("⏱️ HomeView TIMING: onScanSuccess callback received")
@@ -87,6 +98,11 @@ struct HomeView: View {
                     print("⏱️ HomeView TIMING: NFC session fully dismissed, now showing container detail")
                     waitingForNFCDismissal = false
                     showContainerDetail = true
+                }
+            }
+            .sheet(isPresented: $showSettings) {
+                NavigationView {
+                    SettingsView()
                 }
             }
         }

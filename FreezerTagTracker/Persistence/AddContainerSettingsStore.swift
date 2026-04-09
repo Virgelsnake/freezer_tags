@@ -1,6 +1,11 @@
 import Foundation
 
-final class AddContainerSettingsStore: FoodCategoryPresetProviding {
+protocol AddContainerSettingsProviding: FoodCategoryPresetProviding {
+    func load() -> AddContainerSettings
+    func save(_ settings: AddContainerSettings)
+}
+
+final class AddContainerSettingsStore: AddContainerSettingsProviding {
     private enum Keys {
         static let settings = "addContainerSettings"
     }

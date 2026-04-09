@@ -1,6 +1,17 @@
 import Combine
 import Foundation
 
+protocol TagWriting {
+    func writeTag(record: ContainerRecord, completion: @escaping (Result<Void, Error>) -> Void)
+}
+
+protocol ContainerRecordStoring {
+    func save(record: ContainerRecord) throws
+}
+
+extension NFCManager: TagWriting {}
+extension DataStore: ContainerRecordStoring {}
+
 final class AddContainerFlowViewModel: ObservableObject {
     @Published var draft = AddContainerDraft()
     @Published var step: AddContainerStep = .details
@@ -8,15 +19,37 @@ final class AddContainerFlowViewModel: ObservableObject {
     @Published var writeResult: TagWriteResult?
 
     private let presetProvider: FoodCategoryPresetProviding
+    private let settingsStore: AddContainerSettingsProviding
     private let bestQualityDateCalculator: BestQualityDateCalculator
+    private let tagWriter: TagWriting
+    private let recordStore: ContainerRecordStoring
+    private let spokenFeedbackService: SpokenFeedbackServing
+    private let accessibilityAnnouncementService: AccessibilityAnnouncementServing
+    private let hapticsService: HapticsServing
+    private let accessibilityStatusProvider: AccessibilityStatusProviding
+    private var pendingRecord: ContainerRecord?
 
     init(
         draft: AddContainerDraft = AddContainerDraft(),
-        presetProvider: FoodCategoryPresetProviding = AddContainerSettingsStore()
+        presetProvider: FoodCategoryPresetProviding = AddContainerSettingsStore(),
+        settingsStore: AddContainerSettingsProviding = AddContainerSettingsStore(),
+        tagWriter: TagWriting = NFCManager.shared,
+        recordStore: ContainerRecordStoring = DataStore.shared,
+        spokenFeedbackService: SpokenFeedbackServing = SpokenFeedbackService(),
+        accessibilityAnnouncementService: AccessibilityAnnouncementServing = AccessibilityAnnouncementService(),
+        hapticsService: HapticsServing = HapticsService(),
+        accessibilityStatusProvider: AccessibilityStatusProviding = SystemAccessibilityStatusProvider()
     ) {
         self.draft = draft
         self.presetProvider = presetProvider
+        self.settingsStore = settingsStore
         self.bestQualityDateCalculator = BestQualityDateCalculator(presetProvider: presetProvider)
+        self.tagWriter = tagWriter
+        self.recordStore = recordStore
+        self.spokenFeedbackService = spokenFeedbackService
+        self.accessibilityAnnouncementService = accessibilityAnnouncementService
+        self.hapticsService = hapticsService
+        self.accessibilityStatusProvider = accessibilityStatusProvider
     }
 
     var availablePresets: [FoodCategoryPreset] {
@@ -25,6 +58,28 @@ final class AddContainerFlowViewModel: ObservableObject {
 
     var canProceedToReview: Bool {
         draft.canProceedToReview
+    }
+
+    var showsMicrophoneShortcut: Bool {
+        currentSettings().microphoneShortcutEnabled
+    }
+
+    var canReplaySuccessDetails: Bool {
+        currentSettings().showReadDetailsAgainButton && successReplayMessage != nil
+    }
+
+    var successReplayMessage: String? {
+        guard let record = completedRecord else {
+            return nil
+        }
+
+        let frozenDate = Self.replayDateFormatter.string(from: record.dateFrozen)
+
+        if let bestBeforeDate = record.bestBeforeDate {
+            return "\(record.foodName). Frozen \(frozenDate). Best quality by \(Self.replayDateFormatter.string(from: bestBeforeDate)). Tag updated successfully."
+        }
+
+        return "\(record.foodName). Frozen \(frozenDate). No best-quality date saved. Tag updated successfully."
     }
 
     var presetStatusMessage: String? {
@@ -41,6 +96,14 @@ final class AddContainerFlowViewModel: ObservableObject {
         }
 
         return "Best-quality date added from USDA guidance."
+    }
+
+    var completedRecord: ContainerRecord? {
+        guard case .success(let record) = writeResult else {
+            return nil
+        }
+
+        return record
     }
 
     func updateFoodName(_ foodName: String) {
@@ -70,7 +133,40 @@ final class AddContainerFlowViewModel: ObservableObject {
         draft.notes = String(notes.prefix(200))
     }
 
+    func handleDetailsScreenAppeared() {
+        deliverGuidance("Add a container. Tell us what you are freezing.")
+    }
+
     func goToReview() {
+        guard !draft.trimmedFoodName.isEmpty else {
+            validationMessage = "Food name is required."
+            step = .details
+            playHaptic(.validationError)
+            deliverGuidance("Food name is required before you can continue.")
+            return
+        }
+
+        validationMessage = nil
+        step = .review
+        playHaptic(.primaryAction)
+        deliverGuidance("Review and write. Check the details, then write them to the tag.")
+    }
+
+    func goBackToDetails() {
+        validationMessage = nil
+        writeResult = nil
+        pendingRecord = nil
+        step = .details
+    }
+
+    func goBackToReview() {
+        validationMessage = nil
+        writeResult = nil
+        pendingRecord = nil
+        step = .review
+    }
+
+    func writeToTag() {
         guard !draft.trimmedFoodName.isEmpty else {
             validationMessage = "Food name is required."
             step = .details
@@ -78,17 +174,141 @@ final class AddContainerFlowViewModel: ObservableObject {
         }
 
         validationMessage = nil
-        step = .review
+        writeResult = nil
+
+        let record = pendingRecord ?? makeRecordFromDraft()
+        pendingRecord = record
+        step = .writing
+        playHaptic(.writeStart)
+        deliverGuidance("Ready to write. Hold your iPhone near the tag.")
+
+        tagWriter.writeTag(record: record) { [weak self] result in
+            self?.handleWriteResult(result, for: record)
+        }
     }
 
-    func goBackToDetails() {
-        validationMessage = nil
-        step = .details
+    func retryWrite() {
+        writeToTag()
     }
 
     func selectPreset(_ category: FoodCategory) {
         draft.foodCategory = category
         draft.isBestQualityDateManuallyEdited = false
         draft.bestQualityDate = bestQualityDateCalculator.suggestedDate(for: category, frozenOn: draft.dateFrozen)
+        playHaptic(.presetSelection)
+        deliverGuidance(messageForPresetSelection(category))
     }
+
+    func readDetailsAgain() {
+        guard canReplaySuccessDetails, let message = successReplayMessage else {
+            return
+        }
+
+        playHaptic(.replayDetails)
+        deliverConfirmation(message)
+    }
+
+    func persistCurrentSettings() {
+        settingsStore.save(currentSettings())
+    }
+
+    private func currentSettings() -> AddContainerSettings {
+        settingsStore.load()
+    }
+
+    private func playHaptic(_ event: HapticsEvent) {
+        guard currentSettings().hapticsEnabled else {
+            return
+        }
+
+        hapticsService.play(event)
+    }
+
+    private func deliverGuidance(_ message: String) {
+        guard currentSettings().spokenGuidanceEnabled else {
+            return
+        }
+
+        if accessibilityStatusProvider.isVoiceOverRunning {
+            accessibilityAnnouncementService.announce(message)
+        } else {
+            spokenFeedbackService.speak(message)
+        }
+    }
+
+    private func deliverConfirmation(_ message: String) {
+        guard currentSettings().spokenConfirmationsEnabled else {
+            return
+        }
+
+        if accessibilityStatusProvider.isVoiceOverRunning {
+            accessibilityAnnouncementService.announce(message)
+        } else {
+            spokenFeedbackService.speak(message)
+        }
+    }
+
+    private func messageForPresetSelection(_ category: FoodCategory) -> String {
+        guard bestQualityDateCalculator.suggestedDate(for: category, frozenOn: draft.dateFrozen) != nil else {
+            return "\(category.displayName) selected. No best-quality date added."
+        }
+
+        return "\(category.displayName) selected. Best-quality date added."
+    }
+
+    private func makeRecordFromDraft() -> ContainerRecord {
+        let trimmedNotes = draft.notes.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        return ContainerRecord(
+            tagID: UUID().uuidString,
+            foodName: draft.trimmedFoodName,
+            foodCategory: draft.foodCategory,
+            dateFrozen: draft.dateFrozen,
+            notes: trimmedNotes.isEmpty ? nil : trimmedNotes,
+            bestBeforeDate: draft.bestQualityDate
+        )
+    }
+
+    private func handleWriteResult(_ result: Result<Void, Error>, for record: ContainerRecord) {
+        let applyResult = { [weak self] in
+            guard let self = self else {
+                return
+            }
+
+            switch result {
+            case .success:
+                do {
+                    try self.recordStore.save(record: record)
+                    self.writeResult = .success(record: record)
+                    self.pendingRecord = nil
+                    self.step = .success
+                    self.playHaptic(.writeSuccess)
+                    self.deliverConfirmation("Saved. Tag updated.")
+                } catch {
+                    self.writeResult = .failure(message: error.localizedDescription)
+                    self.step = .failure
+                    self.playHaptic(.writeFailure)
+                    self.deliverConfirmation("The tag was not updated. Try holding your phone a little closer and keep it still.")
+                }
+            case .failure(let error):
+                self.writeResult = .failure(message: error.localizedDescription)
+                self.step = .failure
+                self.playHaptic(.writeFailure)
+                self.deliverConfirmation("The tag was not updated. Try holding your phone a little closer and keep it still.")
+            }
+        }
+
+        if Thread.isMainThread {
+            applyResult()
+        } else {
+            DispatchQueue.main.async(execute: applyResult)
+        }
+    }
+
+    private static let replayDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .none
+        return formatter
+    }()
 }

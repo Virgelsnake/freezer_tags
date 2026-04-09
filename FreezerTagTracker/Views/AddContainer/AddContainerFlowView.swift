@@ -2,20 +2,18 @@ import SwiftUI
 
 struct AddContainerFlowView: View {
     @StateObject private var viewModel: AddContainerFlowViewModel
-    @State private var isSubmitting = false
-    @State private var errorMessage: String?
 
     let onCancel: () -> Void
-    let onSubmit: (AddContainerDraft, @escaping (Result<Void, Error>) -> Void) -> Void
+    let onComplete: () -> Void
 
     init(
         viewModel: AddContainerFlowViewModel = AddContainerFlowViewModel(),
         onCancel: @escaping () -> Void,
-        onSubmit: @escaping (AddContainerDraft, @escaping (Result<Void, Error>) -> Void) -> Void
+        onComplete: @escaping () -> Void
     ) {
         _viewModel = StateObject(wrappedValue: viewModel)
         self.onCancel = onCancel
-        self.onSubmit = onSubmit
+        self.onComplete = onComplete
     }
 
     var body: some View {
@@ -23,43 +21,27 @@ struct AddContainerFlowView: View {
             switch viewModel.step {
             case .details:
                 AddContainerDetailsView(viewModel: viewModel, onCancel: onCancel)
-            case .review, .writing, .success, .failure:
+            case .review:
                 AddContainerReviewView(
                     draft: viewModel.draft,
-                    isSubmitting: isSubmitting,
-                    onWrite: submitDraft,
+                    isSubmitting: false,
+                    onWrite: viewModel.writeToTag,
                     onGoBack: viewModel.goBackToDetails
                 )
-            }
-        }
-        .alert("Could not write to tag", isPresented: Binding(
-            get: { errorMessage != nil },
-            set: { newValue in
-                if !newValue {
-                    errorMessage = nil
-                }
-            }
-        )) {
-            Button("OK", role: .cancel) {
-                errorMessage = nil
-            }
-        } message: {
-            Text(errorMessage ?? "")
-        }
-    }
-
-    private func submitDraft() {
-        guard !isSubmitting else {
-            return
-        }
-
-        isSubmitting = true
-        onSubmit(viewModel.draft) { result in
-            DispatchQueue.main.async {
-                isSubmitting = false
-
-                if case .failure(let error) = result {
-                    errorMessage = error.localizedDescription
+            case .writing:
+                TagWritingView()
+            case .success, .failure:
+                if let writeResult = viewModel.writeResult {
+                    TagWriteResultView(
+                        result: writeResult,
+                        canReadDetailsAgain: viewModel.canReplaySuccessDetails,
+                        onReadDetailsAgain: viewModel.readDetailsAgain,
+                        onDone: onComplete,
+                        onTryAgain: viewModel.retryWrite,
+                        onGoBack: viewModel.goBackToReview
+                    )
+                } else {
+                    ProgressView()
                 }
             }
         }
@@ -68,8 +50,6 @@ struct AddContainerFlowView: View {
 
 #Preview {
     NavigationView {
-        AddContainerFlowView(onCancel: {}, onSubmit: { _, completion in
-            completion(.success(()))
-        })
+        AddContainerFlowView(onCancel: {}, onComplete: {})
     }
 }

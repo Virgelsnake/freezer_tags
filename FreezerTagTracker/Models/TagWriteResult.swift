@@ -1,6 +1,6 @@
 import Foundation
 
 enum TagWriteResult: Equatable {
-    case success
+    case success(record: ContainerRecord)
     case failure(message: String)
 }

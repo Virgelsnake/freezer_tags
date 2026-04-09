@@ -6,31 +6,16 @@ struct AddContainerView: View {
 
     var body: some View {
         AddContainerFlowView(
+            viewModel: viewModel.makeAddContainerFlowViewModel(),
             onCancel: { dismiss() },
-            onSubmit: saveDraft
+            onComplete: finishFlow
         )
         .navigationBarBackButtonHidden(true)
     }
 
-    private func saveDraft(
-        _ draft: AddContainerDraft,
-        completion: @escaping (Result<Void, Error>) -> Void
-    ) {
-        viewModel.saveContainerWithNFC(
-            foodName: draft.trimmedFoodName,
-            foodCategory: draft.foodCategory,
-            dateFrozen: draft.dateFrozen,
-            notes: draft.notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : draft.notes,
-            bestBeforeDate: draft.bestQualityDate
-        ) { result in
-            switch result {
-            case .success:
-                dismiss()
-                completion(.success(()))
-            case .failure(let error):
-                completion(.failure(error))
-            }
-        }
+    private func finishFlow() {
+        viewModel.loadContainers()
+        dismiss()
     }
 }
 

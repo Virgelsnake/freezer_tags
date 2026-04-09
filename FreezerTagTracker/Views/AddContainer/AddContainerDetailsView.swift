@@ -51,6 +51,7 @@ struct AddContainerDetailsView: View {
             pendingDateFrozen = viewModel.draft.dateFrozen
             pendingBestQualityDate = viewModel.draft.bestQualityDate ?? viewModel.draft.dateFrozen
             focusedField = .foodName
+            viewModel.handleDetailsScreenAppeared()
         }
     }
 
@@ -77,12 +78,16 @@ struct AddContainerDetailsView: View {
             if dynamicTypeSize.isAccessibilitySize {
                 VStack(alignment: .leading, spacing: 12) {
                     foodNameField
-                    microphoneButton(maxWidth: true)
+                    if viewModel.showsMicrophoneShortcut {
+                        microphoneButton(maxWidth: true)
+                    }
                 }
             } else {
                 HStack(alignment: .top, spacing: 12) {
                     foodNameField
-                    microphoneButton(maxWidth: false)
+                    if viewModel.showsMicrophoneShortcut {
+                        microphoneButton(maxWidth: false)
+                    }
                 }
             }
 

@@ -15,6 +15,14 @@ class ContainerViewModel: ObservableObject {
         self.nfcManager = nfcManager
         loadContainers()
     }
+
+    func makeAddContainerFlowViewModel(draft: AddContainerDraft = AddContainerDraft()) -> AddContainerFlowViewModel {
+        AddContainerFlowViewModel(
+            draft: draft,
+            tagWriter: nfcManager,
+            recordStore: dataStore
+        )
+    }
     
     func loadContainers() {
         containers = dataStore.fetchAll()

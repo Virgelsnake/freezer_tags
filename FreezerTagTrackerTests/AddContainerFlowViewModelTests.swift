@@ -2,6 +2,121 @@ import XCTest
 @testable import FreezerTagTracker
 
 final class AddContainerFlowViewModelTests: XCTestCase {
+    func testWriteToTagStartsWritingAndBuildsRecordFromDraft() throws {
+        let calendar = Calendar(identifier: .gregorian)
+        let dateFrozen = calendar.date(from: DateComponents(year: 2026, month: 4, day: 9))!
+        let bestQualityDate = calendar.date(from: DateComponents(year: 2026, month: 8, day: 9))!
+        let writer = RecordingTagWriter()
+        let store = RecordingRecordStore()
+        let viewModel = makeViewModel(
+            draft: AddContainerDraft(
+                foodName: "  Beef stew  ",
+                foodCategory: .beef,
+                dateFrozen: dateFrozen,
+                bestQualityDate: bestQualityDate,
+                notes: "  Family dinner leftovers  "
+            ),
+            tagWriter: writer,
+            recordStore: store
+        )
+
+        viewModel.goToReview()
+        viewModel.writeToTag()
+
+        XCTAssertEqual(viewModel.step, .writing)
+        XCTAssertNil(viewModel.writeResult)
+        XCTAssertEqual(store.savedRecords.count, 0)
+
+        let writtenRecord = try XCTUnwrap(writer.writtenRecords.first)
+        XCTAssertEqual(writtenRecord.foodName, "Beef stew")
+        XCTAssertEqual(writtenRecord.foodCategory, .beef)
+        XCTAssertEqual(writtenRecord.dateFrozen, dateFrozen)
+        XCTAssertEqual(writtenRecord.bestBeforeDate, bestQualityDate)
+        XCTAssertEqual(writtenRecord.notes, "Family dinner leftovers")
+    }
+
+    func testWriteToTagSuccessPersistsRecordAndShowsSuccessState() throws {
+        let writer = RecordingTagWriter(results: [.success(())])
+        let store = RecordingRecordStore()
+        let viewModel = makeViewModel(
+            draft: AddContainerDraft(foodName: "Chicken soup"),
+            tagWriter: writer,
+            recordStore: store
+        )
+
+        viewModel.goToReview()
+        viewModel.writeToTag()
+
+        XCTAssertEqual(viewModel.step, .success)
+        XCTAssertEqual(store.savedRecords.count, 1)
+        XCTAssertEqual(store.savedRecords.first, writer.writtenRecords.first)
+
+        let resultRecord = try XCTUnwrap(viewModel.completedRecord)
+        XCTAssertEqual(viewModel.writeResult, .success(record: resultRecord))
+    }
+
+    func testWriteToTagFailureShowsFailureStateWithoutSavingAndPreservesDraft() {
+        let writer = RecordingTagWriter(results: [.failure(NFCError.writeFailed)])
+        let store = RecordingRecordStore()
+        let originalDraft = AddContainerDraft(
+            foodName: "Fish pie",
+            foodCategory: .fish,
+            notes: "Use the blue lid"
+        )
+        let viewModel = makeViewModel(
+            draft: originalDraft,
+            tagWriter: writer,
+            recordStore: store
+        )
+
+        viewModel.goToReview()
+        viewModel.writeToTag()
+
+        XCTAssertEqual(viewModel.step, .failure)
+        XCTAssertEqual(viewModel.writeResult, .failure(message: NFCError.writeFailed.localizedDescription))
+        XCTAssertEqual(store.savedRecords.count, 0)
+        XCTAssertEqual(viewModel.draft, originalDraft)
+    }
+
+    func testRetryWriteFromFailureStartsAnotherAttemptWithoutReenteringDraft() {
+        let writer = RecordingTagWriter(results: [.failure(NFCError.writeFailed), .success(())])
+        let store = RecordingRecordStore()
+        let viewModel = makeViewModel(
+            draft: AddContainerDraft(foodName: "Vegetable curry"),
+            tagWriter: writer,
+            recordStore: store
+        )
+
+        viewModel.goToReview()
+        viewModel.writeToTag()
+
+        XCTAssertEqual(viewModel.step, .failure)
+
+        viewModel.retryWrite()
+
+        XCTAssertEqual(writer.writtenRecords.count, 2)
+        XCTAssertEqual(writer.writtenRecords[0].tagID, writer.writtenRecords[1].tagID)
+        XCTAssertEqual(viewModel.step, .success)
+        XCTAssertEqual(store.savedRecords.count, 1)
+    }
+
+    func testGoBackFromFailureReturnsToReviewAndClearsFailureResult() {
+        let writer = RecordingTagWriter(results: [.failure(NFCError.writeFailed)])
+        let store = RecordingRecordStore()
+        let viewModel = makeViewModel(
+            draft: AddContainerDraft(foodName: "Pastries"),
+            tagWriter: writer,
+            recordStore: store
+        )
+
+        viewModel.goToReview()
+        viewModel.writeToTag()
+        viewModel.goBackToReview()
+
+        XCTAssertEqual(viewModel.step, .review)
+        XCTAssertNil(viewModel.writeResult)
+    }
+
     func testAvailablePresetsMatchesExpectedOrder() {
         let viewModel = AddContainerFlowViewModel()
 
@@ -132,4 +247,260 @@ final class AddContainerFlowViewModelTests: XCTestCase {
 
         XCTAssertEqual(viewModel.presetStatusMessage, "Date changed")
     }
+
+    func testSelectPresetSpeaksGuidanceAndPlaysSelectionHapticWhenVoiceOverIsOff() {
+        let speech = RecordingSpokenFeedbackService()
+        let announcements = RecordingAccessibilityAnnouncementService()
+        let haptics = RecordingHapticsService()
+        let settingsStore = InMemoryAddContainerSettingsStore()
+        let viewModel = makeViewModel(
+            draft: AddContainerDraft(),
+            tagWriter: RecordingTagWriter(),
+            recordStore: RecordingRecordStore(),
+            settingsStore: settingsStore,
+            spokenFeedbackService: speech,
+            accessibilityAnnouncementService: announcements,
+            hapticsService: haptics,
+            accessibilityStatusProvider: StubAccessibilityStatusProvider(isVoiceOverRunning: false)
+        )
+
+        viewModel.selectPreset(.beef)
+
+        XCTAssertEqual(speech.messages, ["Beef selected. Best-quality date added."])
+        XCTAssertEqual(announcements.messages, [])
+        XCTAssertEqual(haptics.events, [.presetSelection])
+    }
+
+    func testHandleDetailsScreenAppearedUsesVoiceOverAnnouncementWithoutCustomSpeech() {
+        let speech = RecordingSpokenFeedbackService()
+        let announcements = RecordingAccessibilityAnnouncementService()
+        let viewModel = makeViewModel(
+            draft: AddContainerDraft(),
+            tagWriter: RecordingTagWriter(),
+            recordStore: RecordingRecordStore(),
+            spokenFeedbackService: speech,
+            accessibilityAnnouncementService: announcements,
+            accessibilityStatusProvider: StubAccessibilityStatusProvider(isVoiceOverRunning: true)
+        )
+
+        viewModel.handleDetailsScreenAppeared()
+
+        XCTAssertEqual(speech.messages, [])
+        XCTAssertEqual(announcements.messages, ["Add a container. Tell us what you are freezing."])
+    }
+
+    func testGoToReviewPlaysPrimaryActionAndSpeaksReviewGuidance() {
+        let speech = RecordingSpokenFeedbackService()
+        let haptics = RecordingHapticsService()
+        let viewModel = makeViewModel(
+            draft: AddContainerDraft(foodName: "Chicken soup"),
+            tagWriter: RecordingTagWriter(),
+            recordStore: RecordingRecordStore(),
+            spokenFeedbackService: speech,
+            hapticsService: haptics
+        )
+
+        viewModel.goToReview()
+
+        XCTAssertEqual(viewModel.step, .review)
+        XCTAssertEqual(speech.messages, ["Review and write. Check the details, then write them to the tag."])
+        XCTAssertEqual(haptics.events, [.primaryAction])
+    }
+
+    func testWriteSuccessSpeaksShortConfirmationBuildsReplaySummaryAndPlaysSuccessHaptic() {
+        let speech = RecordingSpokenFeedbackService()
+        let haptics = RecordingHapticsService()
+        let writer = RecordingTagWriter(results: [.success(())])
+        let store = RecordingRecordStore()
+        let calendar = Calendar(identifier: .gregorian)
+        let dateFrozen = calendar.date(from: DateComponents(year: 2026, month: 4, day: 9))!
+        let bestQualityDate = calendar.date(from: DateComponents(year: 2026, month: 8, day: 9))!
+        let viewModel = makeViewModel(
+            draft: AddContainerDraft(
+                foodName: "Beef stew",
+                foodCategory: .beef,
+                dateFrozen: dateFrozen,
+                bestQualityDate: bestQualityDate
+            ),
+            tagWriter: writer,
+            recordStore: store,
+            spokenFeedbackService: speech,
+            hapticsService: haptics
+        )
+
+        viewModel.goToReview()
+        speech.messages.removeAll()
+        haptics.events.removeAll()
+
+        viewModel.writeToTag()
+
+        XCTAssertEqual(viewModel.step, .success)
+        XCTAssertEqual(speech.messages, ["Ready to write. Hold your iPhone near the tag.", "Saved. Tag updated."])
+        XCTAssertEqual(haptics.events, [.writeStart, .writeSuccess])
+        XCTAssertTrue(viewModel.canReplaySuccessDetails)
+        XCTAssertTrue(viewModel.successReplayMessage?.contains("Beef stew") == true)
+        XCTAssertTrue(viewModel.successReplayMessage?.contains("Tag updated successfully.") == true)
+    }
+
+    func testReadDetailsAgainSpeaksSavedSummaryAndPlaysReplayHaptic() throws {
+        let speech = RecordingSpokenFeedbackService()
+        let haptics = RecordingHapticsService()
+        let writer = RecordingTagWriter(results: [.success(())])
+        let store = RecordingRecordStore()
+        let viewModel = makeViewModel(
+            draft: AddContainerDraft(foodName: "Vegetable curry"),
+            tagWriter: writer,
+            recordStore: store,
+            spokenFeedbackService: speech,
+            hapticsService: haptics
+        )
+
+        viewModel.goToReview()
+        viewModel.writeToTag()
+        speech.messages.removeAll()
+        haptics.events.removeAll()
+
+        viewModel.readDetailsAgain()
+
+        XCTAssertEqual(haptics.events, [.replayDetails])
+        XCTAssertEqual(speech.messages, [try XCTUnwrap(viewModel.successReplayMessage)])
+    }
+
+    func testReadDetailsAgainRespectsSettingsToggle() {
+        let speech = RecordingSpokenFeedbackService()
+        let haptics = RecordingHapticsService()
+        let writer = RecordingTagWriter(results: [.success(())])
+        let store = RecordingRecordStore()
+        let settingsStore = InMemoryAddContainerSettingsStore(
+            settings: AddContainerSettings(showReadDetailsAgainButton: false)
+        )
+        let viewModel = makeViewModel(
+            draft: AddContainerDraft(foodName: "Pastries"),
+            tagWriter: writer,
+            recordStore: store,
+            settingsStore: settingsStore,
+            spokenFeedbackService: speech,
+            hapticsService: haptics
+        )
+
+        viewModel.goToReview()
+        viewModel.writeToTag()
+        speech.messages.removeAll()
+        haptics.events.removeAll()
+        viewModel.readDetailsAgain()
+
+        XCTAssertFalse(viewModel.canReplaySuccessDetails)
+        XCTAssertEqual(speech.messages, [])
+        XCTAssertEqual(haptics.events, [])
+    }
+
+    private func makeViewModel(
+        draft: AddContainerDraft,
+        tagWriter: RecordingTagWriter,
+        recordStore: RecordingRecordStore,
+        settingsStore: InMemoryAddContainerSettingsStore = InMemoryAddContainerSettingsStore(),
+        spokenFeedbackService: RecordingSpokenFeedbackService = RecordingSpokenFeedbackService(),
+        accessibilityAnnouncementService: RecordingAccessibilityAnnouncementService = RecordingAccessibilityAnnouncementService(),
+        hapticsService: RecordingHapticsService = RecordingHapticsService(),
+        accessibilityStatusProvider: StubAccessibilityStatusProvider = StubAccessibilityStatusProvider(isVoiceOverRunning: false)
+    ) -> AddContainerFlowViewModel {
+        AddContainerFlowViewModel(
+            draft: draft,
+            presetProvider: settingsStore,
+            settingsStore: settingsStore,
+            tagWriter: tagWriter,
+            recordStore: recordStore,
+            spokenFeedbackService: spokenFeedbackService,
+            accessibilityAnnouncementService: accessibilityAnnouncementService,
+            hapticsService: hapticsService,
+            accessibilityStatusProvider: accessibilityStatusProvider
+        )
+    }
+}
+
+private final class RecordingTagWriter: TagWriting {
+    private(set) var writtenRecords: [ContainerRecord] = []
+    var results: [Result<Void, Error>]
+
+    init(results: [Result<Void, Error>] = []) {
+        self.results = results
+    }
+
+    func writeTag(record: ContainerRecord, completion: @escaping (Result<Void, Error>) -> Void) {
+        writtenRecords.append(record)
+
+        guard !results.isEmpty else {
+            return
+        }
+
+        completion(results.removeFirst())
+    }
+}
+
+private final class RecordingRecordStore: ContainerRecordStoring {
+    private(set) var savedRecords: [ContainerRecord] = []
+
+    func save(record: ContainerRecord) throws {
+        savedRecords.append(record)
+    }
+}
+
+private final class InMemoryAddContainerSettingsStore: AddContainerSettingsProviding {
+    private var settings: AddContainerSettings
+
+    init(settings: AddContainerSettings = AddContainerSettings()) {
+        self.settings = settings
+    }
+
+    func load() -> AddContainerSettings {
+        settings
+    }
+
+    func save(_ settings: AddContainerSettings) {
+        self.settings = settings
+    }
+
+    func preset(for category: FoodCategory) -> FoodCategoryPreset {
+        presets().first(where: { $0.category == category })!
+    }
+
+    func presets() -> [FoodCategoryPreset] {
+        let overrides = settings.presetOverrides
+
+        return AddContainerSettingsStore.defaultPresets.map { preset in
+            FoodCategoryPreset(
+                category: preset.category,
+                displayName: preset.displayName,
+                recommendedStorageMonths: overrides[preset.category] ?? preset.recommendedStorageMonths
+            )
+        }
+    }
+}
+
+private final class RecordingSpokenFeedbackService: SpokenFeedbackServing {
+    var messages: [String] = []
+
+    func speak(_ message: String) {
+        messages.append(message)
+    }
+}
+
+private final class RecordingAccessibilityAnnouncementService: AccessibilityAnnouncementServing {
+    private(set) var messages: [String] = []
+
+    func announce(_ message: String) {
+        messages.append(message)
+    }
+}
+
+private final class RecordingHapticsService: HapticsServing {
+    var events: [HapticsEvent] = []
+
+    func play(_ event: HapticsEvent) {
+        events.append(event)
+    }
+}
+
+private struct StubAccessibilityStatusProvider: AccessibilityStatusProviding {
+    let isVoiceOverRunning: Bool
 }
