@@ -21,6 +21,11 @@ struct AddContainerFlowView: View {
             switch viewModel.step {
             case .details:
                 AddContainerDetailsView(viewModel: viewModel, onCancel: onCancel)
+                    .toolbar {
+                        ToolbarItem(placement: .cancellationAction) {
+                            cancelFlowButton
+                        }
+                    }
             case .review:
                 AddContainerReviewView(
                     draft: viewModel.draft,
@@ -31,9 +36,14 @@ struct AddContainerFlowView: View {
                     onGoBack: viewModel.goBackToDetails,
                     onAppear: viewModel.handleReviewScreenAppeared
                 )
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        cancelFlowButton
+                    }
+                }
             case .writing:
                 TagWritingView()
-            case .success, .failure:
+            case .success:
                 if let writeResult = viewModel.writeResult {
                     TagWriteResultView(
                         result: writeResult,
@@ -46,8 +56,32 @@ struct AddContainerFlowView: View {
                 } else {
                     ProgressView()
                 }
+            case .failure:
+                if let writeResult = viewModel.writeResult {
+                    TagWriteResultView(
+                        result: writeResult,
+                        canReadDetailsAgain: viewModel.canReplaySuccessDetails,
+                        onReadDetailsAgain: viewModel.readDetailsAgain,
+                        onDone: onComplete,
+                        onTryAgain: viewModel.retryWrite,
+                        onGoBack: viewModel.goBackToReview
+                    )
+                    .toolbar {
+                        ToolbarItem(placement: .cancellationAction) {
+                            cancelFlowButton
+                        }
+                    }
+                } else {
+                    ProgressView()
+                }
             }
         }
+    }
+
+    private var cancelFlowButton: some View {
+        Button("Cancel", action: onCancel)
+            .accessibilityHint("Returns to the home screen without saving this container.")
+            .accessibilityIdentifier("addContainer.cancelFlowButton")
     }
 }
 

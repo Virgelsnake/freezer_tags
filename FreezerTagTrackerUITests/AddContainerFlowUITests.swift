@@ -16,6 +16,7 @@ final class AddContainerFlowUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Review and write"].waitForExistence(timeout: 2))
         XCTAssertTrue(app.staticTexts["Beef stew"].waitForExistence(timeout: 2))
         XCTAssertTrue(app.buttons["addContainer.reviewReadDetailsAgainButton"].exists)
+        XCTAssertTrue(app.buttons["addContainer.cancelFlowButton"].exists)
     }
 
     func testGoBackFromReviewKeepsEnteredFoodName() {
