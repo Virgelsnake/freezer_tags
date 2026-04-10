@@ -289,7 +289,64 @@ final class AddContainerFlowViewModelTests: XCTestCase {
         XCTAssertEqual(announcements.messages, ["Add a container. Tell us what you are freezing."])
     }
 
-    func testGoToReviewPlaysPrimaryActionAndSpeaksReviewGuidance() {
+    func testHandleDetailsScreenAppearedRefreshesSettingsDependentUiState() {
+        let settingsStore = InMemoryAddContainerSettingsStore()
+        let viewModel = makeViewModel(
+            draft: AddContainerDraft(),
+            tagWriter: RecordingTagWriter(),
+            recordStore: RecordingRecordStore(),
+            settingsStore: settingsStore
+        )
+
+        XCTAssertTrue(viewModel.showsMicrophoneShortcut)
+
+        settingsStore.save(
+            AddContainerSettings(
+                spokenGuidanceEnabled: true,
+                spokenConfirmationsEnabled: true,
+                hapticsEnabled: true,
+                microphoneShortcutEnabled: false,
+                showReadDetailsAgainButton: true
+            )
+        )
+
+        viewModel.handleDetailsScreenAppeared()
+
+        XCTAssertFalse(viewModel.showsMicrophoneShortcut)
+    }
+
+    func testHandleDetailsScreenAppearedKeepsInjectedSettingsSnapshot() {
+        let settingsStore = InMemoryAddContainerSettingsStore(
+            settings: AddContainerSettings(
+                spokenGuidanceEnabled: true,
+                spokenConfirmationsEnabled: true,
+                hapticsEnabled: true,
+                microphoneShortcutEnabled: true,
+                showReadDetailsAgainButton: true
+            )
+        )
+        let injectedSettings = AddContainerSettings(
+            spokenGuidanceEnabled: true,
+            spokenConfirmationsEnabled: true,
+            hapticsEnabled: true,
+            microphoneShortcutEnabled: false,
+            showReadDetailsAgainButton: false
+        )
+        let viewModel = makeViewModel(
+            draft: AddContainerDraft(),
+            initialSettings: injectedSettings,
+            tagWriter: RecordingTagWriter(),
+            recordStore: RecordingRecordStore(),
+            settingsStore: settingsStore
+        )
+
+        viewModel.handleDetailsScreenAppeared()
+
+        XCTAssertFalse(viewModel.showsMicrophoneShortcut)
+        XCTAssertFalse(viewModel.canReplaySuccessDetails)
+    }
+
+    func testGoToReviewAdvancesToReviewAndPlaysPrimaryAction() {
         let speech = RecordingSpokenFeedbackService()
         let haptics = RecordingHapticsService()
         let viewModel = makeViewModel(
@@ -303,8 +360,175 @@ final class AddContainerFlowViewModelTests: XCTestCase {
         viewModel.goToReview()
 
         XCTAssertEqual(viewModel.step, .review)
-        XCTAssertEqual(speech.messages, ["Review and write. Check the details, then write them to the tag."])
+        XCTAssertEqual(speech.messages, [])
         XCTAssertEqual(haptics.events, [.primaryAction])
+    }
+
+    func testReviewReplayMessageIncludesDatesWhenBestQualityDateExists() {
+        let calendar = Calendar(identifier: .gregorian)
+        let dateFrozen = calendar.date(from: DateComponents(year: 2026, month: 4, day: 9))!
+        let bestQualityDate = calendar.date(from: DateComponents(year: 2026, month: 8, day: 9))!
+        let viewModel = makeViewModel(
+            draft: AddContainerDraft(
+                foodName: "Beef curry",
+                dateFrozen: dateFrozen,
+                bestQualityDate: bestQualityDate
+            ),
+            tagWriter: RecordingTagWriter(),
+            recordStore: RecordingRecordStore()
+        )
+
+        XCTAssertEqual(
+            viewModel.reviewReplayMessage,
+            "Review and write. Beef curry. Frozen 9 Apr 2026. Best quality by 9 Aug 2026."
+        )
+    }
+
+    func testReviewReplayMessageUsesMissingDateCopyWhenBestQualityDateIsNotSet() {
+        let calendar = Calendar(identifier: .gregorian)
+        let dateFrozen = calendar.date(from: DateComponents(year: 2026, month: 4, day: 9))!
+        let viewModel = makeViewModel(
+            draft: AddContainerDraft(
+                foodName: "Beef curry",
+                dateFrozen: dateFrozen
+            ),
+            tagWriter: RecordingTagWriter(),
+            recordStore: RecordingRecordStore()
+        )
+
+        XCTAssertEqual(
+            viewModel.reviewReplayMessage,
+            "Review and write. Beef curry. Frozen 9 Apr 2026. No best-quality date set."
+        )
+    }
+
+    func testReviewReplayMessageAppendsNotesWhenPresent() {
+        let calendar = Calendar(identifier: .gregorian)
+        let dateFrozen = calendar.date(from: DateComponents(year: 2026, month: 4, day: 9))!
+        let viewModel = makeViewModel(
+            draft: AddContainerDraft(
+                foodName: "Beef curry",
+                dateFrozen: dateFrozen,
+                notes: "Use first"
+            ),
+            tagWriter: RecordingTagWriter(),
+            recordStore: RecordingRecordStore()
+        )
+
+        XCTAssertEqual(
+            viewModel.reviewReplayMessage,
+            "Review and write. Beef curry. Frozen 9 Apr 2026. No best-quality date set. Notes: Use first."
+        )
+    }
+
+    func testReviewReplayMessageOmitsNotesWhenBlank() {
+        let calendar = Calendar(identifier: .gregorian)
+        let dateFrozen = calendar.date(from: DateComponents(year: 2026, month: 4, day: 9))!
+        let viewModel = makeViewModel(
+            draft: AddContainerDraft(
+                foodName: "Beef curry",
+                dateFrozen: dateFrozen,
+                notes: "   "
+            ),
+            tagWriter: RecordingTagWriter(),
+            recordStore: RecordingRecordStore()
+        )
+
+        XCTAssertEqual(
+            viewModel.reviewReplayMessage,
+            "Review and write. Beef curry. Frozen 9 Apr 2026. No best-quality date set."
+        )
+    }
+
+    func testHandleReviewScreenAppearedSpeaksReviewSummaryWhenGuidanceIsEnabled() {
+        let speech = RecordingSpokenFeedbackService()
+        let viewModel = makeViewModel(
+            draft: AddContainerDraft(foodName: "Chicken soup"),
+            tagWriter: RecordingTagWriter(),
+            recordStore: RecordingRecordStore(),
+            spokenFeedbackService: speech
+        )
+
+        viewModel.goToReview()
+        viewModel.handleReviewScreenAppeared()
+
+        XCTAssertEqual(speech.messages, ["Review and write. Chicken soup. Frozen 10 Apr 2026. No best-quality date set."])
+    }
+
+    func testHandleReviewScreenAppearedDoesNotSpeakWhenGuidanceIsDisabled() {
+        let speech = RecordingSpokenFeedbackService()
+        let settingsStore = InMemoryAddContainerSettingsStore(
+            settings: AddContainerSettings(spokenGuidanceEnabled: false)
+        )
+        let viewModel = makeViewModel(
+            draft: AddContainerDraft(foodName: "Chicken soup"),
+            tagWriter: RecordingTagWriter(),
+            recordStore: RecordingRecordStore(),
+            settingsStore: settingsStore,
+            spokenFeedbackService: speech
+        )
+
+        viewModel.goToReview()
+        viewModel.handleReviewScreenAppeared()
+
+        XCTAssertEqual(speech.messages, [])
+        XCTAssertFalse(viewModel.canReplayReviewDetails)
+    }
+
+    func testHandleReviewScreenAppearedUsesVoiceOverAnnouncementWithoutCustomSpeech() {
+        let speech = RecordingSpokenFeedbackService()
+        let announcements = RecordingAccessibilityAnnouncementService()
+        let viewModel = makeViewModel(
+            draft: AddContainerDraft(foodName: "Chicken soup"),
+            tagWriter: RecordingTagWriter(),
+            recordStore: RecordingRecordStore(),
+            spokenFeedbackService: speech,
+            accessibilityAnnouncementService: announcements,
+            accessibilityStatusProvider: StubAccessibilityStatusProvider(isVoiceOverRunning: true)
+        )
+
+        viewModel.goToReview()
+        viewModel.handleReviewScreenAppeared()
+
+        XCTAssertEqual(speech.messages, [])
+        XCTAssertEqual(announcements.messages, ["Review and write. Chicken soup. Frozen 10 Apr 2026. No best-quality date set."])
+    }
+
+    func testReadReviewDetailsAgainSpeaksReviewSummary() throws {
+        let speech = RecordingSpokenFeedbackService()
+        let viewModel = makeViewModel(
+            draft: AddContainerDraft(foodName: "Chicken soup"),
+            tagWriter: RecordingTagWriter(),
+            recordStore: RecordingRecordStore(),
+            spokenFeedbackService: speech
+        )
+
+        viewModel.goToReview()
+        speech.messages.removeAll()
+
+        viewModel.readReviewDetailsAgain()
+
+        XCTAssertEqual(speech.messages, [try XCTUnwrap(viewModel.reviewReplayMessage)])
+    }
+
+    func testReadReviewDetailsAgainRespectsSpokenGuidanceSetting() {
+        let speech = RecordingSpokenFeedbackService()
+        let settingsStore = InMemoryAddContainerSettingsStore(
+            settings: AddContainerSettings(spokenGuidanceEnabled: false)
+        )
+        let viewModel = makeViewModel(
+            draft: AddContainerDraft(foodName: "Chicken soup"),
+            tagWriter: RecordingTagWriter(),
+            recordStore: RecordingRecordStore(),
+            settingsStore: settingsStore,
+            spokenFeedbackService: speech
+        )
+
+        viewModel.goToReview()
+        viewModel.readReviewDetailsAgain()
+
+        XCTAssertEqual(speech.messages, [])
+        XCTAssertFalse(viewModel.canReplayReviewDetails)
     }
 
     func testWriteSuccessSpeaksShortConfirmationBuildsReplaySummaryAndPlaysSuccessHaptic() {
@@ -427,6 +651,7 @@ final class AddContainerFlowViewModelTests: XCTestCase {
 
     private func makeViewModel(
         draft: AddContainerDraft,
+        initialSettings: AddContainerSettings? = nil,
         tagWriter: RecordingTagWriter,
         recordStore: RecordingRecordStore,
         settingsStore: InMemoryAddContainerSettingsStore = InMemoryAddContainerSettingsStore(),
@@ -437,6 +662,7 @@ final class AddContainerFlowViewModelTests: XCTestCase {
     ) -> AddContainerFlowViewModel {
         AddContainerFlowViewModel(
             draft: draft,
+            initialSettings: initialSettings,
             presetProvider: settingsStore,
             settingsStore: settingsStore,
             tagWriter: tagWriter,

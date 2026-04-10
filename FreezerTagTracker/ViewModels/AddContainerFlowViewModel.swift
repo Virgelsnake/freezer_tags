@@ -17,6 +17,7 @@ final class AddContainerFlowViewModel: ObservableObject {
     @Published var step: AddContainerStep = .details
     @Published var validationMessage: String?
     @Published var writeResult: TagWriteResult?
+    @Published private var settings: AddContainerSettings
 
     private let presetProvider: FoodCategoryPresetProviding
     private let settingsStore: AddContainerSettingsProviding
@@ -27,10 +28,12 @@ final class AddContainerFlowViewModel: ObservableObject {
     private let accessibilityAnnouncementService: AccessibilityAnnouncementServing
     private let hapticsService: HapticsServing
     private let accessibilityStatusProvider: AccessibilityStatusProviding
+    private let refreshSettingsFromStore: Bool
     private var pendingRecord: ContainerRecord?
 
     init(
         draft: AddContainerDraft = AddContainerDraft(),
+        initialSettings: AddContainerSettings? = nil,
         presetProvider: FoodCategoryPresetProviding = AddContainerSettingsStore(),
         settingsStore: AddContainerSettingsProviding = AddContainerSettingsStore(),
         tagWriter: TagWriting = NFCManager.shared,
@@ -40,9 +43,12 @@ final class AddContainerFlowViewModel: ObservableObject {
         hapticsService: HapticsServing = HapticsService(),
         accessibilityStatusProvider: AccessibilityStatusProviding = SystemAccessibilityStatusProvider()
     ) {
+        let resolvedSettings = initialSettings ?? settingsStore.load()
         self.draft = draft
         self.presetProvider = presetProvider
         self.settingsStore = settingsStore
+        self.settings = resolvedSettings
+        self.refreshSettingsFromStore = initialSettings == nil
         self.bestQualityDateCalculator = BestQualityDateCalculator(presetProvider: presetProvider)
         self.tagWriter = tagWriter
         self.recordStore = recordStore
@@ -61,11 +67,41 @@ final class AddContainerFlowViewModel: ObservableObject {
     }
 
     var showsMicrophoneShortcut: Bool {
-        currentSettings().microphoneShortcutEnabled
+        settings.microphoneShortcutEnabled
+    }
+
+    var canReplayReviewDetails: Bool {
+        settings.spokenGuidanceEnabled && reviewReplayMessage != nil
     }
 
     var canReplaySuccessDetails: Bool {
-        currentSettings().showReadDetailsAgainButton && successReplayMessage != nil
+        settings.showReadDetailsAgainButton && successReplayMessage != nil
+    }
+
+    var reviewReplayMessage: String? {
+        guard !draft.trimmedFoodName.isEmpty else {
+            return nil
+        }
+
+        var components = [
+            "Review and write",
+            draft.trimmedFoodName,
+            "Frozen \(Self.replayDateFormatter.string(from: draft.dateFrozen))"
+        ]
+
+        if let bestQualityDate = draft.bestQualityDate {
+            components.append("Best quality by \(Self.replayDateFormatter.string(from: bestQualityDate))")
+        } else {
+            components.append("No best-quality date set")
+        }
+
+        let trimmedNotes = draft.notes.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        if !trimmedNotes.isEmpty {
+            components.append("Notes: \(trimmedNotes)")
+        }
+
+        return components.joined(separator: ". ") + "."
     }
 
     var successReplayMessage: String? {
@@ -134,10 +170,23 @@ final class AddContainerFlowViewModel: ObservableObject {
     }
 
     func handleDetailsScreenAppeared() {
+        refreshSettings()
         deliverGuidance("Add a container. Tell us what you are freezing.")
     }
 
+    func handleReviewScreenAppeared() {
+        refreshSettings()
+
+        guard let reviewReplayMessage else {
+            return
+        }
+
+        deliverGuidance(reviewReplayMessage)
+    }
+
     func goToReview() {
+        refreshSettings()
+
         guard !draft.trimmedFoodName.isEmpty else {
             validationMessage = "Food name is required."
             step = .details
@@ -149,7 +198,6 @@ final class AddContainerFlowViewModel: ObservableObject {
         validationMessage = nil
         step = .review
         playHaptic(.primaryAction)
-        deliverGuidance("Review and write. Check the details, then write them to the tag.")
     }
 
     func goBackToDetails() {
@@ -167,6 +215,8 @@ final class AddContainerFlowViewModel: ObservableObject {
     }
 
     func writeToTag() {
+        refreshSettings()
+
         guard !draft.trimmedFoodName.isEmpty else {
             validationMessage = "Food name is required."
             step = .details
@@ -192,6 +242,7 @@ final class AddContainerFlowViewModel: ObservableObject {
     }
 
     func selectPreset(_ category: FoodCategory) {
+        refreshSettings()
         draft.foodCategory = category
         draft.isBestQualityDateManuallyEdited = false
         draft.bestQualityDate = bestQualityDateCalculator.suggestedDate(for: category, frozenOn: draft.dateFrozen)
@@ -200,6 +251,8 @@ final class AddContainerFlowViewModel: ObservableObject {
     }
 
     func readDetailsAgain() {
+        refreshSettings()
+
         guard canReplaySuccessDetails, let message = successReplayMessage else {
             return
         }
@@ -208,16 +261,23 @@ final class AddContainerFlowViewModel: ObservableObject {
         deliverConfirmation(message)
     }
 
-    func persistCurrentSettings() {
-        settingsStore.save(currentSettings())
+    func readReviewDetailsAgain() {
+        refreshSettings()
+
+        guard canReplayReviewDetails, let reviewReplayMessage else {
+            return
+        }
+
+        deliverGuidance(reviewReplayMessage)
     }
 
-    private func currentSettings() -> AddContainerSettings {
-        settingsStore.load()
+    func persistCurrentSettings() {
+        settingsStore.save(settings)
+        refreshSettings()
     }
 
     private func playHaptic(_ event: HapticsEvent) {
-        guard currentSettings().hapticsEnabled else {
+        guard settings.hapticsEnabled else {
             return
         }
 
@@ -225,7 +285,7 @@ final class AddContainerFlowViewModel: ObservableObject {
     }
 
     private func deliverGuidance(_ message: String) {
-        guard currentSettings().spokenGuidanceEnabled else {
+        guard settings.spokenGuidanceEnabled else {
             return
         }
 
@@ -237,7 +297,7 @@ final class AddContainerFlowViewModel: ObservableObject {
     }
 
     private func deliverConfirmation(_ message: String) {
-        guard currentSettings().spokenConfirmationsEnabled else {
+        guard settings.spokenConfirmationsEnabled else {
             return
         }
 
@@ -246,6 +306,14 @@ final class AddContainerFlowViewModel: ObservableObject {
         } else {
             spokenFeedbackService.speak(message)
         }
+    }
+
+    private func refreshSettings() {
+        guard refreshSettingsFromStore else {
+            return
+        }
+
+        settings = settingsStore.load()
     }
 
     private func messageForPresetSelection(_ category: FoodCategory) -> String {

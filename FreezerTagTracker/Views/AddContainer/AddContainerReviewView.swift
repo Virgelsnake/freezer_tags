@@ -3,8 +3,11 @@ import SwiftUI
 struct AddContainerReviewView: View {
     let draft: AddContainerDraft
     let isSubmitting: Bool
+    let canReadDetailsAgain: Bool
+    let onReadDetailsAgain: () -> Void
     let onWrite: () -> Void
     let onGoBack: () -> Void
+    let onAppear: () -> Void
 
     var body: some View {
         ScrollView {
@@ -35,6 +38,15 @@ struct AddContainerReviewView: View {
                 .accessibilitySortPriority(2)
 
                 VStack(alignment: .leading, spacing: 14) {
+                    if canReadDetailsAgain {
+                        Button("Read details again", action: onReadDetailsAgain)
+                            .font(.body.weight(.semibold))
+                            .foregroundStyle(Color.secondary)
+                            .frame(maxWidth: .infinity, alignment: .center)
+                            .accessibilityHint("Speaks the details that will be written to the tag.")
+                            .accessibilityIdentifier("addContainer.reviewReadDetailsAgainButton")
+                    }
+
                     Button(action: onWrite) {
                         HStack(spacing: 12) {
                             if isSubmitting {
@@ -67,6 +79,7 @@ struct AddContainerReviewView: View {
         .accessibilityIdentifier("addContainer.review.screen")
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
         .navigationBarBackButtonHidden(true)
+        .onAppear(perform: onAppear)
     }
 }
 
@@ -91,7 +104,10 @@ private struct ReviewPrimaryActionButtonStyle: ButtonStyle {
             notes: "Family dinner leftovers"
         ),
         isSubmitting: false,
+        canReadDetailsAgain: true,
+        onReadDetailsAgain: {},
         onWrite: {},
-        onGoBack: {}
+        onGoBack: {},
+        onAppear: {}
     )
 }

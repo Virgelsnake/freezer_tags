@@ -29,12 +29,14 @@ final class SettingsViewModelTests: XCTestCase {
 
         viewModel.spokenGuidanceEnabled = false
         viewModel.hapticsEnabled = false
+        viewModel.microphoneShortcutEnabled = false
         viewModel.showReadDetailsAgainButton = false
         viewModel.persistSettings()
 
         let saved = store.load()
         XCTAssertFalse(saved.spokenGuidanceEnabled)
         XCTAssertFalse(saved.hapticsEnabled)
+        XCTAssertFalse(saved.microphoneShortcutEnabled)
         XCTAssertFalse(saved.showReadDetailsAgainButton)
     }
 

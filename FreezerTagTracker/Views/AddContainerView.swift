@@ -2,11 +2,12 @@ import SwiftUI
 
 struct AddContainerView: View {
     @ObservedObject var viewModel: ContainerViewModel
+    let settingsSnapshot: AddContainerSettings?
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         AddContainerFlowView(
-            viewModel: viewModel.makeAddContainerFlowViewModel(),
+            viewModel: viewModel.makeAddContainerFlowViewModel(initialSettings: settingsSnapshot),
             onCancel: { dismiss() },
             onComplete: finishFlow
         )
@@ -21,6 +22,9 @@ struct AddContainerView: View {
 
 #Preview {
     NavigationView {
-        AddContainerView(viewModel: ContainerViewModel(dataStore: DataStore(inMemory: true)))
+        AddContainerView(
+            viewModel: ContainerViewModel(dataStore: DataStore(inMemory: true)),
+            settingsSnapshot: nil
+        )
     }
 }

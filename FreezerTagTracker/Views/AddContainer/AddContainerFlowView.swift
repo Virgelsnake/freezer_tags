@@ -25,8 +25,11 @@ struct AddContainerFlowView: View {
                 AddContainerReviewView(
                     draft: viewModel.draft,
                     isSubmitting: false,
+                    canReadDetailsAgain: viewModel.canReplayReviewDetails,
+                    onReadDetailsAgain: viewModel.readReviewDetailsAgain,
                     onWrite: viewModel.writeToTag,
-                    onGoBack: viewModel.goBackToDetails
+                    onGoBack: viewModel.goBackToDetails,
+                    onAppear: viewModel.handleReviewScreenAppeared
                 )
             case .writing:
                 TagWritingView()

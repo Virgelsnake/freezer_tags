@@ -15,6 +15,7 @@ final class AddContainerFlowUITests: XCTestCase {
 
         XCTAssertTrue(app.staticTexts["Review and write"].waitForExistence(timeout: 2))
         XCTAssertTrue(app.staticTexts["Beef stew"].waitForExistence(timeout: 2))
+        XCTAssertTrue(app.buttons["addContainer.reviewReadDetailsAgainButton"].exists)
     }
 
     func testGoBackFromReviewKeepsEnteredFoodName() {
@@ -61,13 +62,14 @@ final class AddContainerFlowUITests: XCTestCase {
         app.launch()
         app.buttons["home.settings"].tap()
 
-        let microphoneToggle = app.switches["Show microphone shortcut"]
-        XCTAssertTrue(microphoneToggle.waitForExistence(timeout: 2))
-        microphoneToggle.tap()
-
-        let readDetailsToggle = app.switches["Show Read details again button"]
-        XCTAssertTrue(readDetailsToggle.exists)
-        readDetailsToggle.tap()
+        toggleSetting(
+            identifier: "settings.microphoneShortcutToggle",
+            in: app
+        )
+        toggleSetting(
+            identifier: "settings.readDetailsAgainToggle",
+            in: app
+        )
 
         app.navigationBars.buttons["Done"].tap()
 
@@ -81,6 +83,24 @@ final class AddContainerFlowUITests: XCTestCase {
 
         XCTAssertTrue(app.staticTexts["Saved to your container"].waitForExistence(timeout: 2))
         XCTAssertFalse(app.buttons["addContainer.readDetailsAgainButton"].exists)
+    }
+
+    func testFlowStillWorksWithSpokenGuidanceAndHapticsTurnedOff() {
+        let app = makeApp(writeResult: "success")
+
+        app.launch()
+        app.buttons["home.settings"].tap()
+
+        toggleSetting(identifier: "Spoken guidance", in: app)
+        toggleSetting(identifier: "Haptics", in: app)
+
+        app.navigationBars.buttons["Done"].tap()
+
+        navigateToReview(in: app, foodName: "Tomato soup")
+        app.buttons["addContainer.writeButton"].tap()
+
+        XCTAssertTrue(app.staticTexts["Saved to your container"].waitForExistence(timeout: 2))
+        XCTAssertTrue(app.buttons["addContainer.doneButton"].exists)
     }
 
     private func navigateToReview(in app: XCUIApplication, foodName: String) {
@@ -102,6 +122,27 @@ final class AddContainerFlowUITests: XCTestCase {
         XCTAssertTrue(foodNameField.waitForExistence(timeout: 2))
         foodNameField.tap()
         foodNameField.typeText(foodName)
+    }
+
+    private func toggleSetting(identifier: String, in app: XCUIApplication) {
+        let toggle = app.switches[identifier]
+        reveal(toggle, in: app)
+        XCTAssertTrue(toggle.waitForExistence(timeout: 2))
+        let originalValue = toggle.value as? String
+
+        toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+
+        XCTAssertNotEqual(toggle.value as? String, originalValue)
+    }
+
+    private func reveal(_ element: XCUIElement, in app: XCUIApplication) {
+        for _ in 0..<4 {
+            if element.exists && element.isHittable {
+                return
+            }
+
+            app.swipeUp()
+        }
     }
 
     private func makeApp(writeResult: String = "success") -> XCUIApplication {

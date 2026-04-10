@@ -33,6 +33,7 @@ final class AddContainerSettingsStore: AddContainerSettingsProviding {
         }
 
         userDefaults.set(data, forKey: Keys.settings)
+        userDefaults.synchronize()
     }
 
     func updateSettings(_ update: (inout AddContainerSettings) -> Void) {

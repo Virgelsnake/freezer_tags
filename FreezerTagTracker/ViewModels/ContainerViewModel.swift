@@ -25,9 +25,13 @@ class ContainerViewModel: ObservableObject {
         loadContainers()
     }
 
-    func makeAddContainerFlowViewModel(draft: AddContainerDraft = AddContainerDraft()) -> AddContainerFlowViewModel {
+    func makeAddContainerFlowViewModel(
+        draft: AddContainerDraft = AddContainerDraft(),
+        initialSettings: AddContainerSettings? = nil
+    ) -> AddContainerFlowViewModel {
         AddContainerFlowViewModel(
             draft: draft,
+            initialSettings: initialSettings,
             presetProvider: addContainerSettingsStore,
             settingsStore: addContainerSettingsStore,
             tagWriter: addContainerTagWriter,

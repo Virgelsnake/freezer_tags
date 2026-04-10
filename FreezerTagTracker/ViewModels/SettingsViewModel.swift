@@ -6,10 +6,10 @@ final class SettingsViewModel: ObservableObject {
     @Published var hapticsEnabled: Bool
     @Published var microphoneShortcutEnabled: Bool
     @Published var showReadDetailsAgainButton: Bool
+    @Published private var presetOverrides: [FoodCategory: Int]
 
     private let settingsStore: AddContainerSettingsProviding
     private let defaultPresetMonths: [FoodCategory: Int]
-    private var presetOverrides: [FoodCategory: Int]
 
     init(settingsStore: AddContainerSettingsProviding = AddContainerSettingsStore()) {
         self.settingsStore = settingsStore
@@ -32,6 +32,17 @@ final class SettingsViewModel: ObservableObject {
         AddContainerSettingsStore.defaultPresets
             .map(\.category)
             .filter { $0 != .other }
+    }
+
+    var currentSettings: AddContainerSettings {
+        AddContainerSettings(
+            spokenGuidanceEnabled: spokenGuidanceEnabled,
+            spokenConfirmationsEnabled: spokenConfirmationsEnabled,
+            hapticsEnabled: hapticsEnabled,
+            microphoneShortcutEnabled: microphoneShortcutEnabled,
+            showReadDetailsAgainButton: showReadDetailsAgainButton,
+            presetOverrides: presetOverrides
+        )
     }
 
     func presetMonths(for category: FoodCategory) -> Int? {
@@ -58,16 +69,6 @@ final class SettingsViewModel: ObservableObject {
     }
 
     func persistSettings() {
-        settingsStore.save(
-            AddContainerSettings(
-                spokenGuidanceEnabled: spokenGuidanceEnabled,
-                spokenConfirmationsEnabled: spokenConfirmationsEnabled,
-                hapticsEnabled: hapticsEnabled,
-                microphoneShortcutEnabled: microphoneShortcutEnabled,
-                showReadDetailsAgainButton: showReadDetailsAgainButton,
-                presetOverrides: presetOverrides
-            )
-        )
-        objectWillChange.send()
+        settingsStore.save(currentSettings)
     }
 }

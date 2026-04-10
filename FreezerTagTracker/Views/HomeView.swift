@@ -4,19 +4,20 @@ import Combine
 struct HomeView: View {
     @StateObject private var viewModel: ContainerViewModel
     @StateObject private var nfcManager = NFCManager.shared
+    @StateObject private var settingsViewModel: SettingsViewModel
     @State private var showScanSheet = false
     @State private var scannedContainer: ContainerRecord?
     @State private var showContainerDetail = false
     @State private var waitingForNFCDismissal = false
     @State private var showSettings = false
-    private let settingsViewModelFactory: () -> SettingsViewModel
+    @State private var addFlowPresentation: AddFlowPresentation?
 
     init(
         viewModel: ContainerViewModel = ContainerViewModel(),
         settingsViewModelFactory: @escaping () -> SettingsViewModel = { SettingsViewModel() }
     ) {
         _viewModel = StateObject(wrappedValue: viewModel)
-        self.settingsViewModelFactory = settingsViewModelFactory
+        _settingsViewModel = StateObject(wrappedValue: settingsViewModelFactory())
     }
     
     var body: some View {
@@ -43,8 +44,8 @@ struct HomeView: View {
                 Spacer()
                 
                 VStack(spacing: 20) {
-                    NavigationLink {
-                        AddContainerView(viewModel: viewModel)
+                    Button {
+                        addFlowPresentation = AddFlowPresentation(settings: settingsViewModel.currentSettings)
                     } label: {
                         HStack {
                             Image(systemName: "plus.circle.fill")
@@ -113,7 +114,15 @@ struct HomeView: View {
             }
             .sheet(isPresented: $showSettings) {
                 NavigationView {
-                    SettingsView(viewModel: settingsViewModelFactory())
+                    SettingsView(viewModel: settingsViewModel)
+                }
+            }
+            .sheet(item: $addFlowPresentation) { presentation in
+                NavigationView {
+                    AddContainerView(
+                        viewModel: viewModel,
+                        settingsSnapshot: presentation.settings
+                    )
                 }
             }
         }
@@ -165,6 +174,11 @@ struct HomeView: View {
             }
         }
     }
+}
+
+private struct AddFlowPresentation: Identifiable {
+    let id = UUID()
+    let settings: AddContainerSettings
 }
 
 #Preview {

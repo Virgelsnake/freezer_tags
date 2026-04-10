@@ -1,21 +1,42 @@
 import SwiftUI
 
 struct SettingsView: View {
-    @StateObject private var viewModel: SettingsViewModel
+    @ObservedObject var viewModel: SettingsViewModel
     @Environment(\.dismiss) private var dismiss
 
     init(viewModel: SettingsViewModel = SettingsViewModel()) {
-        _viewModel = StateObject(wrappedValue: viewModel)
+        self.viewModel = viewModel
     }
 
     var body: some View {
         Form {
             Section("Guidance") {
-                Toggle("Spoken guidance", isOn: boolBinding(\.spokenGuidanceEnabled))
-                Toggle("Spoken confirmations", isOn: boolBinding(\.spokenConfirmationsEnabled))
-                Toggle("Haptics", isOn: boolBinding(\.hapticsEnabled))
-                Toggle("Show microphone shortcut", isOn: boolBinding(\.microphoneShortcutEnabled))
-                Toggle("Show Read details again button", isOn: boolBinding(\.showReadDetailsAgainButton))
+                Toggle("Spoken guidance", isOn: $viewModel.spokenGuidanceEnabled)
+                    .onChange(of: viewModel.spokenGuidanceEnabled) { _ in
+                        viewModel.persistSettings()
+                    }
+
+                Toggle("Spoken confirmations", isOn: $viewModel.spokenConfirmationsEnabled)
+                    .onChange(of: viewModel.spokenConfirmationsEnabled) { _ in
+                        viewModel.persistSettings()
+                    }
+
+                Toggle("Haptics", isOn: $viewModel.hapticsEnabled)
+                    .onChange(of: viewModel.hapticsEnabled) { _ in
+                        viewModel.persistSettings()
+                    }
+
+                Toggle("Show microphone shortcut", isOn: $viewModel.microphoneShortcutEnabled)
+                    .accessibilityIdentifier("settings.microphoneShortcutToggle")
+                    .onChange(of: viewModel.microphoneShortcutEnabled) { _ in
+                        viewModel.persistSettings()
+                    }
+
+                Toggle("Show Read details again button", isOn: $viewModel.showReadDetailsAgainButton)
+                    .accessibilityIdentifier("settings.readDetailsAgainToggle")
+                    .onChange(of: viewModel.showReadDetailsAgainButton) { _ in
+                        viewModel.persistSettings()
+                    }
             }
 
             Section("Food expiry presets") {
@@ -30,23 +51,17 @@ struct SettingsView: View {
         }
         .navigationTitle("Settings")
         .navigationBarTitleDisplayMode(.inline)
+        .onDisappear {
+            viewModel.persistSettings()
+        }
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Done") {
+                    viewModel.persistSettings()
                     dismiss()
                 }
             }
         }
-    }
-
-    private func boolBinding(_ keyPath: ReferenceWritableKeyPath<SettingsViewModel, Bool>) -> Binding<Bool> {
-        Binding(
-            get: { viewModel[keyPath: keyPath] },
-            set: {
-                viewModel[keyPath: keyPath] = $0
-                viewModel.persistSettings()
-            }
-        )
     }
 }
 
