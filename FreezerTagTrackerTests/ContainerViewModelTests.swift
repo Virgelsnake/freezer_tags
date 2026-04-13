@@ -255,7 +255,7 @@ final class ContainerViewModelTests: XCTestCase {
 
         viewModel.handleScanScreenAppeared()
 
-        XCTAssertEqual(speech.messages, [ContainerViewModel.readyToScanGuidanceMessage])
+        XCTAssertEqual(speech.messages, [AppLanguage.english.strings.readyToScan])
         XCTAssertEqual(announcements.messages, [])
     }
 
@@ -273,7 +273,7 @@ final class ContainerViewModelTests: XCTestCase {
         viewModel.handleScanScreenAppeared()
 
         XCTAssertEqual(speech.messages, [])
-        XCTAssertEqual(announcements.messages, [ContainerViewModel.readyToScanGuidanceMessage])
+        XCTAssertEqual(announcements.messages, [AppLanguage.english.strings.readyToScan])
     }
 
     func testHandleScanScreenAppearedRespectsSpokenGuidanceSetting() {
@@ -331,7 +331,7 @@ private final class InMemoryAddContainerSettingsStore: AddContainerSettingsProvi
 private final class RecordingSpokenFeedbackService: SpokenFeedbackServing {
     private(set) var messages: [String] = []
 
-    func speak(_ message: String) {
+    func speak(_ message: String, language: AppLanguage) {
         messages.append(message)
     }
 }
@@ -339,7 +339,7 @@ private final class RecordingSpokenFeedbackService: SpokenFeedbackServing {
 private final class RecordingAccessibilityAnnouncementService: AccessibilityAnnouncementServing {
     private(set) var messages: [String] = []
 
-    func announce(_ message: String) {
+    func announce(_ message: String, language: AppLanguage) {
         messages.append(message)
     }
 }

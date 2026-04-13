@@ -8,6 +8,7 @@ enum ScanState {
 
 struct ScanView: View {
     @ObservedObject var viewModel: ContainerViewModel
+    @EnvironmentObject private var settingsViewModel: SettingsViewModel
     @Environment(\.dismiss) private var dismiss
     @State private var scanState: ScanState = .scanning
     @State private var hasScanned = false
@@ -23,6 +24,8 @@ struct ScanView: View {
     }
     
     var body: some View {
+        let strings = settingsViewModel.strings
+
         NavigationView {
             ZStack {
                 Color(.systemBackground)
@@ -33,7 +36,7 @@ struct ScanView: View {
                             .font(.system(size: 60))
                             .foregroundStyle(.orange)
                         
-                        Text("Scan Failed")
+                        Text(strings.scanFailed)
                             .font(.title2)
                             .fontWeight(.semibold)
                         
@@ -46,7 +49,7 @@ struct ScanView: View {
                         Button(action: startScanning) {
                             HStack {
                                 Image(systemName: "arrow.clockwise")
-                                Text("Try Again")
+                                Text(strings.tryAgain)
                             }
                             .frame(maxWidth: .infinity)
                             .padding()
@@ -59,11 +62,11 @@ struct ScanView: View {
                     }
                 }
             }
-            .navigationTitle("Scan Container")
+            .navigationTitle(strings.scanContainer)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
+                    Button(strings.cancel) {
                         dismiss()
                     }
                 }
@@ -118,4 +121,5 @@ struct ScanView: View {
 
 #Preview {
     ScanView(viewModel: ContainerViewModel(dataStore: DataStore(inMemory: true)))
+        .environmentObject(SettingsViewModel())
 }

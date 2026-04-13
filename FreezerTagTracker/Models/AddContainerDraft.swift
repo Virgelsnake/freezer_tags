@@ -38,46 +38,31 @@ struct AddContainerDraft: Equatable {
     }
 
     func summaryItems(
+        in language: AppLanguage = .english,
         relativeTo referenceDate: Date = Date(),
         calendar: Calendar = .current
     ) -> [ContainerSummaryItem] {
+        let strings = language.strings
         var items = [
-            ContainerSummaryItem(title: "Food name", value: trimmedFoodName),
-            ContainerSummaryItem(title: "Food type", value: foodCategory?.displayName ?? "Not set"),
+            ContainerSummaryItem(title: strings.foodName, value: trimmedFoodName),
+            ContainerSummaryItem(title: strings.foodType, value: foodCategory?.displayName(in: language) ?? strings.notSet),
             ContainerSummaryItem(
-                title: "Date frozen",
-                value: Self.displayDate(dateFrozen, relativeTo: referenceDate, calendar: calendar)
+                title: strings.dateFrozen,
+                value: strings.today(relativeTo: referenceDate, comparedTo: dateFrozen, calendar: calendar)
             ),
             ContainerSummaryItem(
-                title: "Best quality by",
+                title: strings.bestQualityBy,
                 value: bestQualityDate.map {
-                    Self.formattedDate($0, calendar: calendar)
-                } ?? "Not set"
+                    strings.longDateString($0, calendar: calendar)
+                } ?? strings.notSet
             ),
         ]
 
         let trimmedNotes = notes.trimmingCharacters(in: .whitespacesAndNewlines)
         if !trimmedNotes.isEmpty {
-            items.append(ContainerSummaryItem(title: "Notes", value: trimmedNotes))
+            items.append(ContainerSummaryItem(title: strings.notes, value: trimmedNotes))
         }
 
         return items
-    }
-
-    private static func displayDate(_ date: Date, relativeTo referenceDate: Date, calendar: Calendar) -> String {
-        if calendar.isDate(date, inSameDayAs: referenceDate) {
-            return "Today"
-        }
-
-        return formattedDate(date, calendar: calendar)
-    }
-
-    private static func formattedDate(_ date: Date, calendar: Calendar) -> String {
-        let formatter = DateFormatter()
-        formatter.calendar = calendar
-        formatter.locale = Locale(identifier: "en_US_POSIX")
-        formatter.timeZone = calendar.timeZone
-        formatter.dateFormat = "d MMMM yyyy"
-        return formatter.string(from: date)
     }
 }

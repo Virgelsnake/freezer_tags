@@ -4,12 +4,14 @@ struct FoodPresetEditorView: View {
     @ObservedObject var viewModel: SettingsViewModel
 
     var body: some View {
+        let strings = viewModel.strings
+
         Form {
             Section {
                 ForEach(viewModel.editablePresetCategories, id: \.self) { category in
                     Stepper(value: binding(for: category), in: 1...12) {
                         HStack {
-                            Text(category.displayName)
+                            Text(strings.foodCategory(category))
                             Spacer()
                             Text(monthLabel(for: category))
                                 .foregroundStyle(.secondary)
@@ -18,22 +20,22 @@ struct FoodPresetEditorView: View {
                 }
 
                 HStack {
-                    Text(FoodCategory.other.displayName)
+                    Text(strings.foodCategory(.other))
                     Spacer()
-                    Text("No automatic date")
+                    Text(strings.noAutomaticDate)
                         .foregroundStyle(.secondary)
                 }
             } footer: {
-                Text("Suggested best-quality dates can be reset at any time.")
+                Text(strings.suggestedDatesResettable)
             }
 
             Section {
-                Button("Reset to defaults", role: .destructive) {
+                Button(strings.resetToDefaults, role: .destructive) {
                     viewModel.resetPresetDefaults()
                 }
             }
         }
-        .navigationTitle("Food expiry presets")
+        .navigationTitle(strings.foodExpiryPresetsSectionTitle)
         .navigationBarTitleDisplayMode(.inline)
     }
 
@@ -45,11 +47,12 @@ struct FoodPresetEditorView: View {
     }
 
     private func monthLabel(for category: FoodCategory) -> String {
+        let strings = viewModel.strings
         guard let months = viewModel.presetMonths(for: category) else {
-            return "No automatic date"
+            return strings.noAutomaticDate
         }
 
-        return months == 1 ? "1 month" : "\(months) months"
+        return strings.monthLabel(months)
     }
 }
 

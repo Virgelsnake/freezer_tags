@@ -56,10 +56,7 @@ struct ContainerRecord: Identifiable, Codable, Hashable {
     }
     
     var formattedDateFrozen: String {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        formatter.timeStyle = .none
-        return "Frozen on \(formatter.string(from: dateFrozen))"
+        formattedDateFrozen(in: .english)
     }
     
     var daysFrozen: Int {
@@ -69,24 +66,18 @@ struct ContainerRecord: Identifiable, Codable, Hashable {
     }
     
     var daysFrozenDescription: String {
-        let days = daysFrozen
-        if days == 0 {
-            return "Frozen today"
-        } else if days == 1 {
-            return "1 day ago"
-        } else {
-            return "\(days) days ago"
-        }
+        daysFrozenDescription(in: .english)
     }
     
     var formattedBestBeforeDate: String? {
+        formattedBestBeforeDate(in: .english)
+    }
+
+    func formattedBestBeforeDate(in language: AppLanguage) -> String? {
         guard let bestBeforeDate = bestBeforeDate else {
             return nil
         }
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        formatter.timeStyle = .none
-        return formatter.string(from: bestBeforeDate)
+        return language.strings.dateString(bestBeforeDate)
     }
     
     var daysUntilBestBefore: Int? {
@@ -114,44 +105,41 @@ struct ContainerRecord: Identifiable, Codable, Hashable {
         }
     }
 
+    func formattedDateFrozen(in language: AppLanguage) -> String {
+        language.strings.frozenOn(dateFrozen)
+    }
+
+    func daysFrozenDescription(in language: AppLanguage) -> String {
+        language.strings.daysFrozenDescription(daysFrozen)
+    }
+
     func spokenSummary(
+        in language: AppLanguage = .english,
         relativeTo referenceDate: Date = Date(),
         calendar: Calendar = .current
     ) -> String {
+        let strings = language.strings
         var components = [foodName]
 
         if let foodCategory {
-            components.append("Food type \(foodCategory.displayName)")
+            components.append(strings.foodTypeSummary(foodCategory))
         }
 
-        let frozenText: String
-        if calendar.isDate(dateFrozen, inSameDayAs: referenceDate) {
-            frozenText = "Frozen today"
-        } else {
-            frozenText = "Frozen \(Self.summaryDateFormatter.string(from: dateFrozen))"
-        }
-        components.append(frozenText)
+        components.append(strings.frozenSummary(dateFrozen, referenceDate: referenceDate, calendar: calendar))
 
         if let bestBeforeDate {
-            components.append("Best quality by \(Self.summaryDateFormatter.string(from: bestBeforeDate))")
+            components.append(strings.bestQualitySummary(bestBeforeDate))
         } else {
-            components.append("No best-quality date set")
+            components.append(strings.noBestQualityDateSet)
         }
 
         if let notes {
             let trimmedNotes = notes.trimmingCharacters(in: .whitespacesAndNewlines)
             if !trimmedNotes.isEmpty {
-                components.append("Notes: \(trimmedNotes)")
+                components.append(strings.notesSummary(trimmedNotes))
             }
         }
 
         return components.joined(separator: ". ") + "."
     }
-
-    private static let summaryDateFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        formatter.timeStyle = .none
-        return formatter
-    }()
 }

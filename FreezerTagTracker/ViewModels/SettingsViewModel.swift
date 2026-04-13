@@ -6,6 +6,7 @@ final class SettingsViewModel: ObservableObject {
     @Published var hapticsEnabled: Bool
     @Published var microphoneShortcutEnabled: Bool
     @Published var showReadDetailsAgainButton: Bool
+    @Published var language: AppLanguage
     @Published private var presetOverrides: [FoodCategory: Int]
 
     private let settingsStore: AddContainerSettingsProviding
@@ -20,12 +21,21 @@ final class SettingsViewModel: ObservableObject {
         hapticsEnabled = settings.hapticsEnabled
         microphoneShortcutEnabled = settings.microphoneShortcutEnabled
         showReadDetailsAgainButton = settings.showReadDetailsAgainButton
+        language = settings.language
         presetOverrides = settings.presetOverrides
         defaultPresetMonths = Dictionary(
             uniqueKeysWithValues: AddContainerSettingsStore.defaultPresets.map {
                 ($0.category, $0.recommendedStorageMonths)
             }
         )
+    }
+
+    var strings: AppStrings {
+        language.strings
+    }
+
+    var locale: Locale {
+        language.locale
     }
 
     var editablePresetCategories: [FoodCategory] {
@@ -41,6 +51,7 @@ final class SettingsViewModel: ObservableObject {
             hapticsEnabled: hapticsEnabled,
             microphoneShortcutEnabled: microphoneShortcutEnabled,
             showReadDetailsAgainButton: showReadDetailsAgainButton,
+            language: language,
             presetOverrides: presetOverrides
         )
     }

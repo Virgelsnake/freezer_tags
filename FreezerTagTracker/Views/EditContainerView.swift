@@ -3,6 +3,7 @@ import SwiftUI
 struct EditContainerView: View {
     let container: ContainerRecord
     @ObservedObject var viewModel: ContainerViewModel
+    @EnvironmentObject private var settingsViewModel: SettingsViewModel
     @Environment(\.dismiss) private var dismiss
     
     @State private var foodName: String
@@ -46,19 +47,21 @@ struct EditContainerView: View {
     }
     
     var body: some View {
+        let strings = settingsViewModel.strings
+
         Form {
             Section {
-                TextField("Food Name", text: $foodName)
+                TextField(strings.foodName, text: $foodName)
                     .autocorrectionDisabled()
                     .focused($focusedField, equals: .foodName)
                 
-                DatePicker("Date Frozen", selection: $dateFrozen, displayedComponents: .date)
+                DatePicker(strings.dateFrozen, selection: $dateFrozen, displayedComponents: .date)
             } header: {
-                Text("Container Information")
+                Text(strings.containerInformation)
             }
             
             Section {
-                Toggle("Set Best Before Date", isOn: $hasBestBeforeDate)
+                Toggle(strings.setBestBeforeDate, isOn: $hasBestBeforeDate)
                     .onChange(of: hasBestBeforeDate) { newValue in
                         if newValue && bestBeforeDate == nil {
                             bestBeforeDate = Calendar.current.date(byAdding: .month, value: 3, to: Date())
@@ -68,16 +71,16 @@ struct EditContainerView: View {
                     }
                 
                 if hasBestBeforeDate, let _ = bestBeforeDate {
-                    DatePicker("Best Before Date", selection: Binding(
+                    DatePicker(strings.bestBefore, selection: Binding(
                         get: { bestBeforeDate ?? Date() },
                         set: { bestBeforeDate = $0 }
                     ), displayedComponents: .date)
                 }
             } header: {
-                Text("Best Before Date (Optional)")
+                Text(strings.bestBeforeOptional)
             } footer: {
                 if hasBestBeforeDate {
-                    Text("You'll be notified when the date approaches or passes")
+                    Text(strings.bestBeforeInfo)
                         .font(.caption)
                 }
             }
@@ -85,7 +88,7 @@ struct EditContainerView: View {
             Section {
                 ZStack(alignment: .topLeading) {
                     if notes.isEmpty {
-                        Text("Optional notes (e.g., ingredients, portions)")
+                        Text(strings.optionalNotesPlaceholder(example: true))
                             .foregroundStyle(.secondary)
                             .padding(.top, 8)
                             .padding(.leading, 4)
@@ -103,38 +106,38 @@ struct EditContainerView: View {
                 
                 HStack {
                     Spacer()
-                    Text("\(remainingCharacters) characters remaining")
+                    Text(strings.charactersRemaining(remainingCharacters))
                         .font(.caption)
                         .foregroundStyle(remainingCharacters < 20 ? .red : .secondary)
                 }
             } header: {
-                Text("Notes (Optional)")
+                Text(strings.optionalNotes)
             }
         }
-        .navigationTitle("Edit Container")
+        .navigationTitle(strings.editContainerTitle)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItemGroup(placement: .keyboard) {
                 Spacer()
-                Button("Done") {
+                Button(strings.done) {
                     focusedField = nil
                 }
             }
             ToolbarItem(placement: .cancellationAction) {
-                Button("Cancel") {
+                Button(strings.cancel) {
                     dismiss()
                 }
             }
             
             ToolbarItem(placement: .confirmationAction) {
-                Button(isSaving ? "Saving..." : "Save") {
+                Button(isSaving ? strings.saving : strings.save) {
                     saveChanges()
                 }
                 .disabled(!isValid || !hasChanges || isSaving)
             }
         }
-        .alert("Validation Error", isPresented: $showingValidationError) {
-            Button("OK", role: .cancel) { }
+        .alert(strings.validationErrorTitle, isPresented: $showingValidationError) {
+            Button(strings.done, role: .cancel) { }
         } message: {
             Text(validationMessage)
         }
@@ -150,14 +153,14 @@ struct EditContainerView: View {
         
         guard !trimmedFoodName.isEmpty else {
             print("❌ EditContainerView: Validation failed - empty food name")
-            validationMessage = "Please enter a food name"
+            validationMessage = settingsViewModel.strings.pleaseEnterFoodName
             showingValidationError = true
             return
         }
         
         guard notes.count <= 200 else {
             print("❌ EditContainerView: Validation failed - notes too long")
-            validationMessage = "Notes must be 200 characters or less"
+            validationMessage = settingsViewModel.strings.notesMustBeShorter
             showingValidationError = true
             return
         }
@@ -201,4 +204,5 @@ struct EditContainerView: View {
             viewModel: ContainerViewModel(dataStore: DataStore(inMemory: true))
         )
     }
+    .environmentObject(SettingsViewModel())
 }

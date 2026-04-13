@@ -2,6 +2,7 @@ import SwiftUI
 
 struct AddContainerReviewView: View {
     let draft: AddContainerDraft
+    let language: AppLanguage
     let isSubmitting: Bool
     let canReadDetailsAgain: Bool
     let onReadDetailsAgain: () -> Void
@@ -9,30 +10,34 @@ struct AddContainerReviewView: View {
     let onGoBack: () -> Void
     let onAppear: () -> Void
 
+    private var strings: AppStrings {
+        language.strings
+    }
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Step 2 of 2")
+                    Text(strings.step2Of2)
                         .font(.footnote.weight(.semibold))
                         .foregroundStyle(Color.secondary)
 
-                    Text("Review and write")
+                    Text(strings.reviewAndWrite)
                         .font(.largeTitle.weight(.bold))
 
-                    Text("Check these details, then hold your iPhone near the tag.")
+                    Text(strings.reviewSubtitle)
                         .font(.body)
                         .foregroundStyle(Color.secondary)
                 }
                 .accessibilityElement(children: .combine)
-                .accessibilityLabel("Step 2 of 2. Review and write. Check these details, then hold your iPhone near the tag.")
+                .accessibilityLabel(strings.reviewAccessibilityHeader)
                 .accessibilitySortPriority(3)
 
                 VStack(alignment: .leading, spacing: 12) {
-                    Text("What will be saved")
+                    Text(strings.whatWillBeSaved)
                         .font(.headline)
 
-                    ContainerSummaryCard(items: draft.summaryItems())
+                    ContainerSummaryCard(items: draft.summaryItems(in: language))
                 }
                 .accessibilityElement(children: .contain)
                 .accessibilitySortPriority(2)
@@ -41,12 +46,12 @@ struct AddContainerReviewView: View {
                     if canReadDetailsAgain {
                         Button(action: onReadDetailsAgain) {
                             reviewSecondaryActionLabel(
-                                title: "Read details again",
+                                title: strings.readDetailsAgain,
                                 systemImage: "speaker.wave.2.fill"
                             )
                         }
                             .buttonStyle(ReviewSecondaryActionButtonStyle())
-                            .accessibilityHint("Speaks the details that will be written to the tag.")
+                            .accessibilityHint(strings.readDetailsAgainHint)
                             .accessibilityIdentifier("addContainer.reviewReadDetailsAgainButton")
                     }
 
@@ -57,24 +62,24 @@ struct AddContainerReviewView: View {
                                     .tint(Color.white)
                             }
 
-                            Text(isSubmitting ? "Writing to tag..." : "Write to tag")
+                            Text(isSubmitting ? strings.writingToTag : strings.writeToTag)
                                 .font(.headline)
                         }
                         .frame(maxWidth: .infinity, minHeight: 60)
                     }
                     .buttonStyle(ReviewPrimaryActionButtonStyle())
                     .disabled(isSubmitting)
-                    .accessibilityHint("Starts the tag writing step.")
+                    .accessibilityHint(strings.writeToTagHint)
                     .accessibilityIdentifier("addContainer.writeButton")
 
                     Button(action: onGoBack) {
                         reviewSecondaryActionLabel(
-                            title: "Go back and change",
+                            title: strings.goBackAndChange,
                             systemImage: "arrow.uturn.backward"
                         )
                     }
                         .buttonStyle(ReviewSecondaryActionButtonStyle())
-                        .accessibilityHint("Returns to the previous screen to edit the details.")
+                        .accessibilityHint(strings.goBackHint)
                         .accessibilityIdentifier("addContainer.goBackAndChangeButton")
                 }
                 .accessibilityElement(children: .contain)
@@ -137,6 +142,7 @@ private struct ReviewSecondaryActionButtonStyle: ButtonStyle {
             bestQualityDate: Date(),
             notes: "Family dinner leftovers"
         ),
+        language: .english,
         isSubmitting: false,
         canReadDetailsAgain: true,
         onReadDetailsAgain: {},
@@ -144,4 +150,5 @@ private struct ReviewSecondaryActionButtonStyle: ButtonStyle {
         onGoBack: {},
         onAppear: {}
     )
+    .environmentObject(SettingsViewModel())
 }

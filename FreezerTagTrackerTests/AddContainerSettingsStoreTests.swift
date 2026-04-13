@@ -30,6 +30,7 @@ final class AddContainerSettingsStoreTests: XCTestCase {
                 hapticsEnabled: true,
                 microphoneShortcutEnabled: true,
                 showReadDetailsAgainButton: true,
+                language: .english,
                 presetOverrides: [:]
             )
         )
@@ -49,6 +50,7 @@ final class AddContainerSettingsStoreTests: XCTestCase {
             hapticsEnabled: false,
             microphoneShortcutEnabled: true,
             showReadDetailsAgainButton: false,
+            language: .norwegian,
             presetOverrides: [.beef: 6, .pastries: 2]
         )
 

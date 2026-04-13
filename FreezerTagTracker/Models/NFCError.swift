@@ -13,28 +13,7 @@ enum NFCError: Error, LocalizedError, Equatable {
     case tagNotNDEF
     
     var errorDescription: String? {
-        switch self {
-        case .tagNotFound:
-            return "No NFC tag detected. Please hold your iPhone near the tag and try again."
-        case .readFailed:
-            return "Failed to read the NFC tag. Please try again."
-        case .writeFailed:
-            return "Failed to write to the NFC tag. Please try again."
-        case .tagRemoved:
-            return "Tag was removed too quickly. Please hold your iPhone steady near the tag."
-        case .multipleTagsDetected:
-            return "Multiple tags detected. Please remove extra tags and try again."
-        case .unsupportedTag:
-            return "This tag type is not supported. Please use an NDEF-formatted tag."
-        case .sessionTimeout:
-            return "NFC session timed out. Please try again."
-        case .sessionCancelled:
-            return "NFC scanning was cancelled."
-        case .invalidData:
-            return "Invalid data on tag. The tag may be corrupted or empty."
-        case .tagNotNDEF:
-            return "Tag is not NDEF formatted. Please use an NDEF-compatible tag."
-        }
+        AppLanguage.current.strings.nfcError(self)
     }
     
     var recoverySuggestion: String? {

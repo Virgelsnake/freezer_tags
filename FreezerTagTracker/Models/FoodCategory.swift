@@ -10,21 +10,10 @@ enum FoodCategory: String, Codable, CaseIterable, Hashable {
     case other
 
     var displayName: String {
-        switch self {
-        case .beef:
-            return "Beef"
-        case .fish:
-            return "Fish"
-        case .pastries:
-            return "Pastries"
-        case .poultry:
-            return "Poultry"
-        case .preparedMeal:
-            return "Prepared meal"
-        case .vegetables:
-            return "Vegetables"
-        case .other:
-            return "Other"
-        }
+        displayName(in: .english)
+    }
+
+    func displayName(in language: AppLanguage) -> String {
+        language.strings.foodCategory(self)
     }
 }

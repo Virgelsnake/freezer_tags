@@ -1,12 +1,17 @@
 import SwiftUI
 
 struct TagWriteResultView: View {
+    let language: AppLanguage
     let result: TagWriteResult
     let canReadDetailsAgain: Bool
     let onReadDetailsAgain: () -> Void
     let onDone: () -> Void
     let onTryAgain: () -> Void
     let onGoBack: () -> Void
+
+    private var strings: AppStrings {
+        language.strings
+    }
 
     var body: some View {
         ScrollView {
@@ -33,30 +38,30 @@ struct TagWriteResultView: View {
         switch result {
         case .success(let record):
             VStack(alignment: .leading, spacing: 16) {
-                statusBadge(title: "Saved", systemImage: "checkmark.circle.fill", color: .green)
+                statusBadge(title: strings.saved, systemImage: "checkmark.circle.fill", color: .green)
 
-                Text("Saved to your container")
+                Text(strings.savedToContainerTitle)
                     .font(.largeTitle.weight(.bold))
 
-                Text("\(record.foodName) has been saved and the tag was updated.")
+                Text(strings.savedToContainerMessage(foodName: record.foodName))
                     .font(.body)
                     .foregroundStyle(Color.secondary)
             }
             .accessibilityElement(children: .combine)
-            .accessibilityLabel("\(record.foodName) saved to your container. The tag was updated.")
+            .accessibilityLabel(strings.savedToContainerMessage(foodName: record.foodName))
         case .failure:
             VStack(alignment: .leading, spacing: 16) {
-                statusBadge(title: "Needs attention", systemImage: "xmark.circle.fill", color: .red)
+                statusBadge(title: strings.needsAttention, systemImage: "xmark.circle.fill", color: .red)
 
-                Text("That did not save to the tag")
+                Text(strings.saveFailedTitle)
                     .font(.largeTitle.weight(.bold))
 
-                Text("Try holding your iPhone a little closer and keep it still.")
+                Text(strings.saveFailedMessage)
                     .font(.body)
                     .foregroundStyle(Color.secondary)
             }
             .accessibilityElement(children: .combine)
-            .accessibilityLabel("That did not save to the tag. Try holding your iPhone a little closer and keep it still.")
+            .accessibilityLabel("\(strings.saveFailedTitle). \(strings.saveFailedMessage)")
         }
     }
 
@@ -78,7 +83,7 @@ struct TagWriteResultView: View {
         case .success:
             VStack(alignment: .leading, spacing: 14) {
                 Button(action: onDone) {
-                    Text("Done")
+                    Text(strings.done)
                         .font(.headline)
                         .frame(maxWidth: .infinity, minHeight: 60)
                 }
@@ -87,30 +92,30 @@ struct TagWriteResultView: View {
 
                 if canReadDetailsAgain {
                     Button(action: onReadDetailsAgain) {
-                        Text("Read details again")
+                        Text(strings.readDetailsAgain)
                             .font(.body.weight(.semibold))
                             .frame(maxWidth: .infinity, alignment: .center)
                     }
                     .foregroundStyle(Color.blue)
-                    .accessibilityHint("Replays the saved container details.")
+                    .accessibilityHint(strings.replaySavedDetailsHint)
                     .accessibilityIdentifier("addContainer.readDetailsAgainButton")
                 }
             }
         case .failure:
             VStack(alignment: .leading, spacing: 14) {
                 Button(action: onTryAgain) {
-                    Text("Try again")
+                    Text(strings.tryAgain)
                         .font(.headline)
                         .frame(maxWidth: .infinity, minHeight: 60)
                 }
                 .buttonStyle(ResultPrimaryActionButtonStyle())
                 .accessibilityIdentifier("addContainer.tryAgainButton")
 
-                Button("Go back", action: onGoBack)
+                Button(strings.goBack, action: onGoBack)
                     .font(.body.weight(.semibold))
                     .foregroundStyle(Color.secondary)
                     .frame(maxWidth: .infinity, alignment: .center)
-                    .accessibilityHint("Returns to the review step without losing the details.")
+                    .accessibilityHint(strings.goBackToReviewHint)
                     .accessibilityIdentifier("addContainer.goBackButton")
             }
         }
@@ -131,6 +136,7 @@ private struct ResultPrimaryActionButtonStyle: ButtonStyle {
 
 #Preview {
     TagWriteResultView(
+        language: .english,
         result: .success(record: ContainerRecord(tagID: "preview-tag", foodName: "Beef stew", dateFrozen: Date())),
         canReadDetailsAgain: true,
         onReadDetailsAgain: {},

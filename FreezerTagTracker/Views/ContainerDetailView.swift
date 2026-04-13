@@ -33,6 +33,10 @@ struct ContainerDetailView: View {
     private var container: ContainerRecord {
         viewModel.containers.first { $0.id == initialContainer.id } ?? initialContainer
     }
+
+    private var strings: AppStrings {
+        settingsStore.load().language.strings
+    }
     
     var body: some View {
         List {
@@ -53,25 +57,25 @@ struct ContainerDetailView: View {
                     HStack {
                         Image(systemName: "calendar")
                             .foregroundStyle(.secondary)
-                        Text(container.formattedDateFrozen)
+                        Text(container.formattedDateFrozen(in: settingsStore.load().language))
                             .font(.subheadline)
                     }
                     
                     HStack {
                         Image(systemName: "clock")
                             .foregroundStyle(.secondary)
-                        Text(container.daysFrozenDescription)
+                        Text(container.daysFrozenDescription(in: settingsStore.load().language))
                             .font(.subheadline)
                     }
                     
-                    if let formattedDate = container.formattedBestBeforeDate {
+                    if let formattedDate = container.formattedBestBeforeDate(in: settingsStore.load().language) {
                         Divider()
                         
                         HStack {
                             Image(systemName: bestBeforeIcon)
                                 .foregroundStyle(bestBeforeColor)
                             VStack(alignment: .leading, spacing: 4) {
-                                Text("Best Before")
+                                Text(strings.bestBefore)
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
                                 Text(formattedDate)
@@ -104,7 +108,7 @@ struct ContainerDetailView: View {
                             .font(.body)
                     }
                 } header: {
-                    Text("Notes")
+                    Text(strings.notes)
                 }
             }
             
@@ -112,7 +116,7 @@ struct ContainerDetailView: View {
                 HStack {
                     Image(systemName: "tag")
                         .foregroundStyle(.secondary)
-                    Text("Tag ID")
+                    Text(strings.tagID)
                         .foregroundStyle(.secondary)
                     Spacer()
                     Text(container.tagID)
@@ -120,10 +124,10 @@ struct ContainerDetailView: View {
                         .foregroundStyle(.secondary)
                 }
             } header: {
-                Text("Technical Details")
+                Text(strings.technicalDetails)
             }
         }
-        .navigationTitle("Container Details")
+        .navigationTitle(strings.containerDetails)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
@@ -132,14 +136,14 @@ struct ContainerDetailView: View {
                         print("🟠 ContainerDetailView: Edit button tapped")
                         showingEditView = true
                     }) {
-                        Label("Edit", systemImage: "pencil")
+                        Label(strings.edit, systemImage: "pencil")
                     }
                     
                     Button(role: .destructive, action: { 
                         print("🟠 ContainerDetailView: Clear & Reuse button tapped")
                         showingClearConfirmation = true 
                     }) {
-                        Label("Clear & Reuse", systemImage: "trash")
+                        Label(strings.clearAndReuse, systemImage: "trash")
                     }
                 } label: {
                     Image(systemName: "ellipsis.circle")
@@ -155,13 +159,13 @@ struct ContainerDetailView: View {
             }
             .hidden()
         )
-        .confirmationDialog("Clear Container", isPresented: $showingClearConfirmation) {
-            Button("Clear & Reuse", role: .destructive) {
+        .confirmationDialog(strings.clearContainerTitle, isPresented: $showingClearConfirmation) {
+            Button(strings.clearAndReuse, role: .destructive) {
                 clearContainer()
             }
-            Button("Cancel", role: .cancel) { }
+            Button(strings.cancel, role: .cancel) { }
         } message: {
-            Text("This will mark the container as empty and ready for reuse. The tag can be rewritten with new information.")
+            Text(strings.clearContainerMessage)
         }
         .onAppear {
             speakSummaryIfNeeded()
@@ -221,7 +225,7 @@ struct ContainerDetailView: View {
         switch container.bestBeforeStatus {
         case .approaching:
             if let days = container.daysUntilBestBefore {
-                Text("\(days)d left")
+                Text(strings.daysLeft(days))
                     .font(.caption2)
                     .fontWeight(.semibold)
                     .foregroundStyle(.white)
@@ -232,7 +236,7 @@ struct ContainerDetailView: View {
             }
         case .expired:
             if let days = container.daysUntilBestBefore {
-                Text("\(abs(days))d ago")
+                Text(strings.daysAgoShort(abs(days)))
                     .font(.caption2)
                     .fontWeight(.semibold)
                     .foregroundStyle(.white)
@@ -258,11 +262,11 @@ struct ContainerDetailView: View {
             return
         }
 
-        let message = container.spokenSummary()
+        let message = container.spokenSummary(in: settings.language)
         if accessibilityStatusProvider.isVoiceOverRunning {
-            accessibilityAnnouncementService.announce(message)
+            accessibilityAnnouncementService.announce(message, language: settings.language)
         } else {
-            spokenFeedbackService.speak(message)
+            spokenFeedbackService.speak(message, language: settings.language)
         }
     }
 }
@@ -279,4 +283,5 @@ struct ContainerDetailView: View {
             viewModel: ContainerViewModel(dataStore: DataStore(inMemory: true))
         )
     }
+    .environmentObject(SettingsViewModel())
 }

@@ -2,7 +2,7 @@ import Foundation
 import UIKit
 
 protocol AccessibilityAnnouncementServing {
-    func announce(_ message: String)
+    func announce(_ message: String, language: AppLanguage)
 }
 
 protocol AccessibilityStatusProviding {
@@ -16,11 +16,15 @@ struct SystemAccessibilityStatusProvider: AccessibilityStatusProviding {
 }
 
 final class AccessibilityAnnouncementService: AccessibilityAnnouncementServing {
-    func announce(_ message: String) {
+    func announce(_ message: String, language: AppLanguage) {
         guard !message.isEmpty else {
             return
         }
 
-        UIAccessibility.post(notification: .announcement, argument: message)
+        let attributedMessage = NSAttributedString(
+            string: message,
+            attributes: [.accessibilitySpeechLanguage: language.speechIdentifier]
+        )
+        UIAccessibility.post(notification: .announcement, argument: attributedMessage)
     }
 }

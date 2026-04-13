@@ -10,6 +10,7 @@ final class SettingsViewModelTests: XCTestCase {
                 hapticsEnabled: false,
                 microphoneShortcutEnabled: true,
                 showReadDetailsAgainButton: false,
+                language: .spanish,
                 presetOverrides: [.beef: 6]
             )
         )
@@ -19,6 +20,7 @@ final class SettingsViewModelTests: XCTestCase {
         XCTAssertFalse(viewModel.spokenGuidanceEnabled)
         XCTAssertTrue(viewModel.spokenConfirmationsEnabled)
         XCTAssertFalse(viewModel.hapticsEnabled)
+        XCTAssertEqual(viewModel.language, .spanish)
         XCTAssertEqual(viewModel.presetMonths(for: .beef), 6)
         XCTAssertNil(viewModel.presetMonths(for: .other))
     }
@@ -31,6 +33,7 @@ final class SettingsViewModelTests: XCTestCase {
         viewModel.hapticsEnabled = false
         viewModel.microphoneShortcutEnabled = false
         viewModel.showReadDetailsAgainButton = false
+        viewModel.language = .french
         viewModel.persistSettings()
 
         let saved = store.load()
@@ -38,6 +41,7 @@ final class SettingsViewModelTests: XCTestCase {
         XCTAssertFalse(saved.hapticsEnabled)
         XCTAssertFalse(saved.microphoneShortcutEnabled)
         XCTAssertFalse(saved.showReadDetailsAgainButton)
+        XCTAssertEqual(saved.language, .french)
     }
 
     func testUpdatingPresetMonthsAndResettingDefaultsPersistsExpectedValues() {

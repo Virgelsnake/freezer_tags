@@ -7,8 +7,8 @@ struct AddContainerDetailsView: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @FocusState private var focusedField: Field?
     @FocusState private var isNotesFocused: Bool
-    @StateObject private var foodNameSpeechRecognizer = SpeechToTextRecognizer(copy: .foodName)
-    @StateObject private var notesSpeechRecognizer = SpeechToTextRecognizer(copy: .notes)
+    @StateObject private var foodNameSpeechRecognizer: SpeechToTextRecognizer
+    @StateObject private var notesSpeechRecognizer: SpeechToTextRecognizer
     @State private var activePicker: ActivePicker?
     @State private var pendingBestQualityDate = Date()
     @State private var pendingDateFrozen = Date()
@@ -22,6 +22,28 @@ struct AddContainerDetailsView: View {
         case bestQuality
 
         var id: String { rawValue }
+    }
+
+    init(viewModel: AddContainerFlowViewModel, onCancel: @escaping () -> Void) {
+        let language = viewModel.currentLanguage
+        self.viewModel = viewModel
+        self.onCancel = onCancel
+        _foodNameSpeechRecognizer = StateObject(
+            wrappedValue: SpeechToTextRecognizer(
+                copy: .foodName(in: language),
+                locale: language.locale
+            )
+        )
+        _notesSpeechRecognizer = StateObject(
+            wrappedValue: SpeechToTextRecognizer(
+                copy: .notes(in: language),
+                locale: language.locale
+            )
+        )
+    }
+
+    private var strings: AppStrings {
+        viewModel.currentLanguage.strings
     }
 
     var body: some View {
@@ -43,7 +65,7 @@ struct AddContainerDetailsView: View {
             switch picker {
             case .dateFrozen:
                 datePickerSheet(
-                    title: "Date frozen",
+                    title: strings.dateFrozen,
                     selection: $pendingDateFrozen,
                     onSave: { viewModel.updateDateFrozen(pendingDateFrozen) }
                 )
@@ -83,25 +105,25 @@ struct AddContainerDetailsView: View {
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Step 1 of 2")
+            Text(strings.step1Of2)
                 .font(.footnote.weight(.semibold))
                 .foregroundStyle(Color.secondary)
 
-            Text("Add a container")
+            Text(strings.addContainerTitle)
                 .font(.largeTitle.weight(.bold))
 
-            Text("Tell us what you are freezing, then we will help you write it to the tag.")
+            Text(strings.addContainerSubtitle)
                 .font(.body)
                 .foregroundStyle(Color.secondary)
         }
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("Step 1 of 2. Add a container. Tell us what you are freezing, then we will help you write it to the tag.")
+        .accessibilityLabel(strings.addContainerAccessibilityHeader)
         .accessibilitySortPriority(6)
     }
 
     private var foodNameSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("Food name")
+            Text(strings.foodName)
                 .font(.headline)
 
             if dynamicTypeSize.isAccessibilitySize {
@@ -121,7 +143,7 @@ struct AddContainerDetailsView: View {
             }
 
             if let validationMessage = viewModel.validationMessage {
-                Text(validationMessage == "Food name is required." ? "Enter a food name to continue" : validationMessage)
+                Text(validationMessage == strings.foodNameRequiredMessage ? strings.foodNameRequiredToContinue : validationMessage)
                     .font(.footnote)
                     .foregroundStyle(Color.red)
             } else if let speechStatusMessage = foodNameSpeechRecognizer.statusMessage {
@@ -129,7 +151,7 @@ struct AddContainerDetailsView: View {
                     .font(.footnote)
                     .foregroundStyle(foodNameSpeechRecognizer.isShowingError ? Color.red : Color.secondary)
             } else {
-                Text("Required")
+                Text(strings.required)
                     .font(.footnote)
                     .foregroundStyle(Color.secondary)
             }
@@ -140,7 +162,7 @@ struct AddContainerDetailsView: View {
 
     private var foodNameField: some View {
         TextField(
-            "Example: Beef stew",
+            strings.foodNameExample,
             text: Binding(
                 get: { viewModel.draft.foodName },
                 set: { viewModel.updateFoodName($0) }
@@ -160,9 +182,9 @@ struct AddContainerDetailsView: View {
                 .stroke(viewModel.validationMessage == nil ? Color(.separator) : Color.red, lineWidth: 1)
         )
         .focused($focusedField, equals: .foodName)
-        .accessibilityLabel("Food name")
-        .accessibilityValue(viewModel.draft.foodName.isEmpty ? "Empty" : viewModel.draft.foodName)
-        .accessibilityHint("Required text field. Double tap to type or use dictation.")
+        .accessibilityLabel(strings.foodName)
+        .accessibilityValue(viewModel.draft.foodName.isEmpty ? strings.empty : viewModel.draft.foodName)
+        .accessibilityHint(strings.foodNameFieldHint)
         .accessibilityIdentifier("addContainer.foodNameField")
     }
 
@@ -190,7 +212,7 @@ struct AddContainerDetailsView: View {
                 )
         }
         .buttonStyle(.plain)
-        .accessibilityHint(foodNameSpeechRecognizer.isListening ? "Double tap to stop listening." : "Double tap to dictate the name of the food.")
+        .accessibilityHint(foodNameSpeechRecognizer.isListening ? strings.stopListeningHint : strings.dictateFoodNameHint)
         .accessibilityIdentifier("addContainer.microphoneButton")
     }
 
@@ -219,7 +241,7 @@ struct AddContainerDetailsView: View {
                 )
         }
         .buttonStyle(.plain)
-        .accessibilityHint(notesSpeechRecognizer.isListening ? "Double tap to stop listening." : "Double tap to dictate a note.")
+        .accessibilityHint(notesSpeechRecognizer.isListening ? strings.stopListeningHint : strings.dictateNoteHint)
         .accessibilityIdentifier("addContainer.notesMicrophoneButton")
     }
 
@@ -229,10 +251,10 @@ struct AddContainerDetailsView: View {
 
     private var presetSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Choose a food type")
+            Text(strings.chooseFoodType)
                 .font(.headline)
 
-            Text("This can add a suggested best-quality date.")
+            Text(strings.foodTypeSuggestionDescription)
                 .font(.body)
                 .foregroundStyle(Color.secondary)
 
@@ -240,9 +262,11 @@ struct AddContainerDetailsView: View {
                 VStack(spacing: 12) {
                     ForEach(viewModel.availablePresets, id: \.category) { preset in
                         FoodPresetButton(
-                            title: preset.displayName,
+                            title: strings.foodCategory(preset.category),
                             isSelected: viewModel.draft.foodCategory == preset.category,
-                            accessibilityIdentifier: "addContainer.preset.\(preset.category.rawValue)"
+                            accessibilityIdentifier: "addContainer.preset.\(preset.category.rawValue)",
+                            accessibilityValue: viewModel.draft.foodCategory == preset.category ? strings.selected : strings.notSelected,
+                            accessibilityHint: strings.presetAccessibilityHint(isSelected: viewModel.draft.foodCategory == preset.category)
                         ) {
                             viewModel.selectPreset(preset.category)
                             if let bestQualityDate = viewModel.draft.bestQualityDate {
@@ -259,9 +283,11 @@ struct AddContainerDetailsView: View {
                 ) {
                     ForEach(viewModel.availablePresets, id: \.category) { preset in
                         FoodPresetButton(
-                            title: preset.displayName,
+                            title: strings.foodCategory(preset.category),
                             isSelected: viewModel.draft.foodCategory == preset.category,
-                            accessibilityIdentifier: "addContainer.preset.\(preset.category.rawValue)"
+                            accessibilityIdentifier: "addContainer.preset.\(preset.category.rawValue)",
+                            accessibilityValue: viewModel.draft.foodCategory == preset.category ? strings.selected : strings.notSelected,
+                            accessibilityHint: strings.presetAccessibilityHint(isSelected: viewModel.draft.foodCategory == preset.category)
                         ) {
                             viewModel.selectPreset(preset.category)
                             if let bestQualityDate = viewModel.draft.bestQualityDate {
@@ -285,18 +311,20 @@ struct AddContainerDetailsView: View {
     private var dateSection: some View {
         VStack(spacing: 12) {
             LabeledDateRow(
-                title: "Date frozen",
+                title: strings.dateFrozen,
                 value: displayDate(viewModel.draft.dateFrozen, relativeTo: Date()),
-                isEmpty: false
+                isEmpty: false,
+                accessibilityHint: strings.changeDateHint
             ) {
                 pendingDateFrozen = viewModel.draft.dateFrozen
                 activePicker = .dateFrozen
             }
 
             LabeledDateRow(
-                title: "Best quality by",
-                value: viewModel.draft.bestQualityDate.map { displayDate($0, relativeTo: Date()) } ?? "Not set",
-                isEmpty: viewModel.draft.bestQualityDate == nil
+                title: strings.bestQualityBy,
+                value: viewModel.draft.bestQualityDate.map { displayDate($0, relativeTo: Date()) } ?? strings.notSet,
+                isEmpty: viewModel.draft.bestQualityDate == nil,
+                accessibilityHint: strings.changeDateHint
             ) {
                 pendingBestQualityDate = viewModel.draft.bestQualityDate ?? viewModel.draft.dateFrozen
                 activePicker = .bestQuality
@@ -310,7 +338,7 @@ struct AddContainerDetailsView: View {
         VStack(alignment: .leading, spacing: 10) {
             if dynamicTypeSize.isAccessibilitySize {
                 VStack(alignment: .leading, spacing: 12) {
-                    Text("Notes")
+                    Text(strings.notes)
                         .font(.headline)
 
                     if viewModel.showsMicrophoneShortcut {
@@ -319,7 +347,7 @@ struct AddContainerDetailsView: View {
                 }
             } else {
                 HStack(alignment: .center, spacing: 12) {
-                    Text("Notes")
+                    Text(strings.notes)
                         .font(.headline)
 
                     Spacer(minLength: 12)
@@ -336,8 +364,8 @@ struct AddContainerDetailsView: View {
                     set: { viewModel.updateNotes($0) }
                 ),
                 title: nil,
-                accessibilityLabel: "Notes",
-                placeholder: "Optional notes",
+                accessibilityLabel: strings.notes,
+                placeholder: strings.optionalNotesPlaceholder(),
                 characterLimit: 200,
                 focus: $isNotesFocused
             )
@@ -357,25 +385,21 @@ struct AddContainerDetailsView: View {
             Button {
                 viewModel.goToReview()
             } label: {
-                Text("Review and write to tag")
+                Text(strings.reviewAndWriteToTag)
                     .font(.headline)
                     .frame(maxWidth: .infinity, minHeight: 60)
             }
             .buttonStyle(PrimaryActionButtonStyle())
             .disabled(!viewModel.canProceedToReview)
             .opacity(viewModel.canProceedToReview ? 1 : 0.45)
-            .accessibilityHint(
-                viewModel.canProceedToReview
-                    ? "Moves to the final review screen before writing to the tag."
-                    : "Disabled. Food name is required."
-            )
+            .accessibilityHint(strings.reviewButtonHint(canProceed: viewModel.canProceedToReview))
             .accessibilityIdentifier("addContainer.reviewButton")
 
-            Button("Cancel", action: onCancel)
+            Button(strings.cancel, action: onCancel)
                 .font(.body.weight(.semibold))
                 .foregroundStyle(Color.secondary)
                 .frame(maxWidth: .infinity, alignment: .center)
-                .accessibilityHint("Closes the add-container flow without saving.")
+                .accessibilityHint(strings.closeAddContainerHint)
                 .accessibilityIdentifier("addContainer.cancelButton")
         }
         .accessibilityElement(children: .contain)
@@ -404,12 +428,12 @@ struct AddContainerDetailsView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
+                    Button(strings.cancel) {
                         activePicker = nil
                     }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") {
+                    Button(strings.done) {
                         onSave()
                         activePicker = nil
                     }
@@ -422,7 +446,7 @@ struct AddContainerDetailsView: View {
         NavigationView {
             VStack(spacing: 24) {
                 DatePicker(
-                    "Best quality by",
+                    strings.bestQualityBy,
                     selection: $pendingBestQualityDate,
                     displayedComponents: .date
                 )
@@ -430,7 +454,7 @@ struct AddContainerDetailsView: View {
                 .labelsHidden()
 
                 if viewModel.draft.bestQualityDate != nil {
-                    Button("Remove date") {
+                    Button(strings.removeDate) {
                         viewModel.updateBestQualityDate(nil)
                         activePicker = nil
                     }
@@ -441,16 +465,16 @@ struct AddContainerDetailsView: View {
                 Spacer()
             }
             .padding(20)
-            .navigationTitle("Best quality by")
+            .navigationTitle(strings.bestQualityBy)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
+                    Button(strings.cancel) {
                         activePicker = nil
                     }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") {
+                    Button(strings.done) {
                         viewModel.updateBestQualityDate(pendingBestQualityDate)
                         activePicker = nil
                     }
@@ -460,15 +484,7 @@ struct AddContainerDetailsView: View {
     }
 
     private func displayDate(_ date: Date, relativeTo referenceDate: Date) -> String {
-        let calendar = Calendar.current
-        if calendar.isDate(date, inSameDayAs: referenceDate) {
-            return "Today"
-        }
-
-        let formatter = DateFormatter()
-        formatter.dateStyle = .long
-        formatter.timeStyle = .none
-        return formatter.string(from: date)
+        strings.today(relativeTo: referenceDate, comparedTo: date)
     }
 
     private func combinedNotes(base: String, dictatedNote: String) -> String {
@@ -502,4 +518,5 @@ private struct PrimaryActionButtonStyle: ButtonStyle {
     NavigationView {
         AddContainerDetailsView(viewModel: AddContainerFlowViewModel(), onCancel: {})
     }
+    .environmentObject(SettingsViewModel())
 }

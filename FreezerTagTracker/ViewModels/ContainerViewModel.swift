@@ -34,8 +34,6 @@ class ContainerViewModel: ObservableObject {
         loadContainers()
     }
 
-    static let readyToScanGuidanceMessage = "Ready to scan. Hold your iPhone near the container tag."
-
     func makeAddContainerFlowViewModel(
         draft: AddContainerDraft = AddContainerDraft(),
         initialSettings: AddContainerSettings? = nil
@@ -185,10 +183,11 @@ class ContainerViewModel: ObservableObject {
             return
         }
 
+        let message = settings.language.strings.readyToScan
         if accessibilityStatusProvider.isVoiceOverRunning {
-            accessibilityAnnouncementService.announce(Self.readyToScanGuidanceMessage)
+            accessibilityAnnouncementService.announce(message, language: settings.language)
         } else {
-            spokenFeedbackService.speak(Self.readyToScanGuidanceMessage)
+            spokenFeedbackService.speak(message, language: settings.language)
         }
     }
     

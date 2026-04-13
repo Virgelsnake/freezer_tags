@@ -29,6 +29,7 @@ struct AddContainerFlowView: View {
             case .review:
                 AddContainerReviewView(
                     draft: viewModel.draft,
+                    language: viewModel.currentLanguage,
                     isSubmitting: false,
                     canReadDetailsAgain: viewModel.canReplayReviewDetails,
                     onReadDetailsAgain: viewModel.readReviewDetailsAgain,
@@ -42,10 +43,11 @@ struct AddContainerFlowView: View {
                     }
                 }
             case .writing:
-                TagWritingView()
+                TagWritingView(language: viewModel.currentLanguage)
             case .success:
                 if let writeResult = viewModel.writeResult {
                     TagWriteResultView(
+                        language: viewModel.currentLanguage,
                         result: writeResult,
                         canReadDetailsAgain: viewModel.canReplaySuccessDetails,
                         onReadDetailsAgain: viewModel.readDetailsAgain,
@@ -59,6 +61,7 @@ struct AddContainerFlowView: View {
             case .failure:
                 if let writeResult = viewModel.writeResult {
                     TagWriteResultView(
+                        language: viewModel.currentLanguage,
                         result: writeResult,
                         canReadDetailsAgain: viewModel.canReplaySuccessDetails,
                         onReadDetailsAgain: viewModel.readDetailsAgain,
@@ -79,8 +82,8 @@ struct AddContainerFlowView: View {
     }
 
     private var cancelFlowButton: some View {
-        Button("Cancel", action: onCancel)
-            .accessibilityHint("Returns to the home screen without saving this container.")
+        Button(viewModel.currentLanguage.strings.cancel, action: onCancel)
+            .accessibilityHint(viewModel.currentLanguage.strings.cancelFlowHint)
             .accessibilityIdentifier("addContainer.cancelFlowButton")
     }
 }
@@ -89,4 +92,5 @@ struct AddContainerFlowView: View {
     NavigationView {
         AddContainerFlowView(onCancel: {}, onComplete: {})
     }
+    .environmentObject(SettingsViewModel())
 }

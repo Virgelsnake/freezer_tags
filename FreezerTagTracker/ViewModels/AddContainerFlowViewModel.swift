@@ -78,27 +78,33 @@ final class AddContainerFlowViewModel: ObservableObject {
         settings.showReadDetailsAgainButton && successReplayMessage != nil
     }
 
+    var currentLanguage: AppLanguage {
+        settings.language
+    }
+
     var reviewReplayMessage: String? {
         guard !draft.trimmedFoodName.isEmpty else {
             return nil
         }
 
+        let strings = settings.language.strings
+
         var components = [
-            "Review and write",
+            strings.reviewAndWrite,
             draft.trimmedFoodName,
-            "Frozen \(Self.replayDateFormatter.string(from: draft.dateFrozen))"
+            strings.frozenSummary(draft.dateFrozen, referenceDate: Date.distantPast)
         ]
 
         if let bestQualityDate = draft.bestQualityDate {
-            components.append("Best quality by \(Self.replayDateFormatter.string(from: bestQualityDate))")
+            components.append(strings.bestQualitySummary(bestQualityDate))
         } else {
-            components.append("No best-quality date set")
+            components.append(strings.noBestQualityDateSet)
         }
 
         let trimmedNotes = draft.notes.trimmingCharacters(in: .whitespacesAndNewlines)
 
         if !trimmedNotes.isEmpty {
-            components.append("Notes: \(trimmedNotes)")
+            components.append(strings.notesSummary(trimmedNotes))
         }
 
         return components.joined(separator: ". ") + "."
@@ -109,13 +115,11 @@ final class AddContainerFlowViewModel: ObservableObject {
             return nil
         }
 
-        let frozenDate = Self.replayDateFormatter.string(from: record.dateFrozen)
-
-        if let bestBeforeDate = record.bestBeforeDate {
-            return "\(record.foodName). Frozen \(frozenDate). Best quality by \(Self.replayDateFormatter.string(from: bestBeforeDate)). Tag updated successfully."
-        }
-
-        return "\(record.foodName). Frozen \(frozenDate). No best-quality date saved. Tag updated successfully."
+        return settings.language.strings.successReplay(
+            foodName: record.foodName,
+            frozenDate: record.dateFrozen,
+            bestBeforeDate: record.bestBeforeDate
+        )
     }
 
     var presetStatusMessage: String? {
@@ -124,14 +128,14 @@ final class AddContainerFlowViewModel: ObservableObject {
         }
 
         if draft.isBestQualityDateManuallyEdited {
-            return "Date changed"
+            return settings.language.strings.dateChangedStatus
         }
 
         guard draft.bestQualityDate != nil else {
             return nil
         }
 
-        return "Best-quality date added from USDA guidance."
+        return settings.language.strings.presetDateAddedStatus
     }
 
     var completedRecord: ContainerRecord? {
@@ -145,7 +149,7 @@ final class AddContainerFlowViewModel: ObservableObject {
     func updateFoodName(_ foodName: String) {
         draft.foodName = foodName
 
-        if !draft.trimmedFoodName.isEmpty, validationMessage == "Food name is required." {
+        if !draft.trimmedFoodName.isEmpty, validationMessage == settings.language.strings.foodNameRequiredMessage {
             validationMessage = nil
         }
     }
@@ -171,7 +175,7 @@ final class AddContainerFlowViewModel: ObservableObject {
 
     func handleDetailsScreenAppeared() {
         refreshSettings()
-        deliverGuidance("Add a container. Tell us what you are freezing.")
+        deliverGuidance(settings.language.strings.addContainerGuidance)
     }
 
     func handleReviewScreenAppeared() {
@@ -188,10 +192,10 @@ final class AddContainerFlowViewModel: ObservableObject {
         refreshSettings()
 
         guard !draft.trimmedFoodName.isEmpty else {
-            validationMessage = "Food name is required."
+            validationMessage = settings.language.strings.foodNameRequiredMessage
             step = .details
             playHaptic(.validationError)
-            deliverGuidance("Food name is required before you can continue.")
+            deliverGuidance(settings.language.strings.foodNameRequiredToContinue)
             return
         }
 
@@ -218,7 +222,7 @@ final class AddContainerFlowViewModel: ObservableObject {
         refreshSettings()
 
         guard !draft.trimmedFoodName.isEmpty else {
-            validationMessage = "Food name is required."
+            validationMessage = settings.language.strings.foodNameRequiredMessage
             step = .details
             return
         }
@@ -230,7 +234,7 @@ final class AddContainerFlowViewModel: ObservableObject {
         pendingRecord = record
         step = .writing
         playHaptic(.writeStart)
-        deliverGuidance("Ready to write. Hold your iPhone near the tag.")
+        deliverGuidance(settings.language.strings.readyToWrite)
 
         tagWriter.writeTag(record: record) { [weak self] result in
             self?.handleWriteResult(result, for: record)
@@ -290,9 +294,9 @@ final class AddContainerFlowViewModel: ObservableObject {
         }
 
         if accessibilityStatusProvider.isVoiceOverRunning {
-            accessibilityAnnouncementService.announce(message)
+            accessibilityAnnouncementService.announce(message, language: settings.language)
         } else {
-            spokenFeedbackService.speak(message)
+            spokenFeedbackService.speak(message, language: settings.language)
         }
     }
 
@@ -302,9 +306,9 @@ final class AddContainerFlowViewModel: ObservableObject {
         }
 
         if accessibilityStatusProvider.isVoiceOverRunning {
-            accessibilityAnnouncementService.announce(message)
+            accessibilityAnnouncementService.announce(message, language: settings.language)
         } else {
-            spokenFeedbackService.speak(message)
+            spokenFeedbackService.speak(message, language: settings.language)
         }
     }
 
@@ -317,11 +321,10 @@ final class AddContainerFlowViewModel: ObservableObject {
     }
 
     private func messageForPresetSelection(_ category: FoodCategory) -> String {
-        guard bestQualityDateCalculator.suggestedDate(for: category, frozenOn: draft.dateFrozen) != nil else {
-            return "\(category.displayName) selected. No best-quality date added."
-        }
-
-        return "\(category.displayName) selected. Best-quality date added."
+        settings.language.strings.presetSelected(
+            category,
+            bestQualityAdded: bestQualityDateCalculator.suggestedDate(for: category, frozenOn: draft.dateFrozen) != nil
+        )
     }
 
     private func makeRecordFromDraft() -> ContainerRecord {
@@ -351,18 +354,18 @@ final class AddContainerFlowViewModel: ObservableObject {
                     self.pendingRecord = nil
                     self.step = .success
                     self.playHaptic(.writeSuccess)
-                    self.deliverConfirmation("Saved. Tag updated.")
+                    self.deliverConfirmation(self.settings.language.strings.savedTagUpdated)
                 } catch {
                     self.writeResult = .failure(message: error.localizedDescription)
                     self.step = .failure
                     self.playHaptic(.writeFailure)
-                    self.deliverConfirmation("The tag was not updated. Try holding your phone a little closer and keep it still.")
+                    self.deliverConfirmation(self.settings.language.strings.tagUpdateFailed)
                 }
             case .failure(let error):
                 self.writeResult = .failure(message: error.localizedDescription)
                 self.step = .failure
                 self.playHaptic(.writeFailure)
-                self.deliverConfirmation("The tag was not updated. Try holding your phone a little closer and keep it still.")
+                self.deliverConfirmation(self.settings.language.strings.tagUpdateFailed)
             }
         }
 
@@ -373,10 +376,4 @@ final class AddContainerFlowViewModel: ObservableObject {
         }
     }
 
-    private static let replayDateFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        formatter.timeStyle = .none
-        return formatter
-    }()
 }

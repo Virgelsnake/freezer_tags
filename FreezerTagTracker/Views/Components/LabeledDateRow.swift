@@ -4,6 +4,7 @@ struct LabeledDateRow: View {
     let title: String
     let value: String
     let isEmpty: Bool
+    let accessibilityHint: String
     let action: () -> Void
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
@@ -40,7 +41,7 @@ struct LabeledDateRow: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(title)
         .accessibilityValue(value)
-        .accessibilityHint("Double tap to change the date.")
+        .accessibilityHint(accessibilityHint)
     }
 
     private var rowLabel: some View {
@@ -65,8 +66,8 @@ struct LabeledDateRow: View {
 
 #Preview {
     VStack(spacing: 16) {
-        LabeledDateRow(title: "Date frozen", value: "Today", isEmpty: false, action: {})
-        LabeledDateRow(title: "Best quality by", value: "Not set", isEmpty: true, action: {})
+        LabeledDateRow(title: "Date frozen", value: "Today", isEmpty: false, accessibilityHint: "Double tap to change the date.", action: {})
+        LabeledDateRow(title: "Best quality by", value: "Not set", isEmpty: true, accessibilityHint: "Double tap to change the date.", action: {})
     }
     .padding()
 }

@@ -4,6 +4,8 @@ struct FoodPresetButton: View {
     let title: String
     let isSelected: Bool
     let accessibilityIdentifier: String
+    let accessibilityValue: String
+    let accessibilityHint: String
     let action: () -> Void
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
@@ -35,8 +37,8 @@ struct FoodPresetButton: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(title)
-        .accessibilityValue(isSelected ? "Selected" : "Not selected")
-        .accessibilityHint("Adds a suggested best-quality date based on USDA guidance.")
+        .accessibilityValue(accessibilityValue)
+        .accessibilityHint(accessibilityHint)
         .accessibilityIdentifier(accessibilityIdentifier)
     }
     private var borderStyle: some View {
@@ -47,8 +49,8 @@ struct FoodPresetButton: View {
 
 #Preview {
     VStack(spacing: 16) {
-        FoodPresetButton(title: "Beef", isSelected: false, accessibilityIdentifier: "preview.beef", action: {})
-        FoodPresetButton(title: "Prepared meal", isSelected: true, accessibilityIdentifier: "preview.preparedMeal", action: {})
+        FoodPresetButton(title: "Beef", isSelected: false, accessibilityIdentifier: "preview.beef", accessibilityValue: "Not selected", accessibilityHint: "Adds a suggested best-quality date based on USDA guidance.", action: {})
+        FoodPresetButton(title: "Prepared meal", isSelected: true, accessibilityIdentifier: "preview.preparedMeal", accessibilityValue: "Selected", accessibilityHint: "Adds a suggested best-quality date based on USDA guidance.", action: {})
     }
     .padding()
 }

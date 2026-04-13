@@ -2,7 +2,7 @@ import AVFoundation
 import Foundation
 
 protocol SpokenFeedbackServing {
-    func speak(_ message: String)
+    func speak(_ message: String, language: AppLanguage)
 }
 
 final class SpokenFeedbackService: NSObject, SpokenFeedbackServing {
@@ -19,7 +19,7 @@ final class SpokenFeedbackService: NSObject, SpokenFeedbackServing {
         self.synthesizer.delegate = self
     }
 
-    func speak(_ message: String) {
+    func speak(_ message: String, language: AppLanguage) {
         guard !message.isEmpty else {
             return
         }
@@ -32,7 +32,7 @@ final class SpokenFeedbackService: NSObject, SpokenFeedbackServing {
 
         let utterance = AVSpeechUtterance(string: message)
         utterance.rate = AVSpeechUtteranceDefaultSpeechRate
-        utterance.voice = AVSpeechSynthesisVoice(language: Locale.current.identifier)
+        utterance.voice = AVSpeechSynthesisVoice(language: language.speechIdentifier)
         synthesizer.speak(utterance)
     }
 

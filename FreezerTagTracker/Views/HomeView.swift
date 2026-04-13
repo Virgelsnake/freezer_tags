@@ -4,7 +4,7 @@ import Combine
 struct HomeView: View {
     @StateObject private var viewModel: ContainerViewModel
     @StateObject private var nfcManager = NFCManager.shared
-    @StateObject private var settingsViewModel: SettingsViewModel
+    @ObservedObject var settingsViewModel: SettingsViewModel
     @State private var showScanSheet = false
     @State private var scannedContainer: ContainerRecord?
     @State private var showContainerDetail = false
@@ -14,13 +14,15 @@ struct HomeView: View {
 
     init(
         viewModel: ContainerViewModel = ContainerViewModel(),
-        settingsViewModelFactory: @escaping () -> SettingsViewModel = { SettingsViewModel() }
+        settingsViewModel: SettingsViewModel = SettingsViewModel()
     ) {
         _viewModel = StateObject(wrappedValue: viewModel)
-        _settingsViewModel = StateObject(wrappedValue: settingsViewModelFactory())
+        self.settingsViewModel = settingsViewModel
     }
     
     var body: some View {
+        let strings = settingsViewModel.strings
+
         NavigationView {
             VStack(spacing: 40) {
                 Spacer()
@@ -34,7 +36,7 @@ struct HomeView: View {
                         .font(.largeTitle)
                         .fontWeight(.bold)
                     
-                    Text("Tap an NFC tag to manage your frozen containers")
+                    Text(strings.homeSubtitle)
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
@@ -50,7 +52,7 @@ struct HomeView: View {
                         HStack {
                             Image(systemName: "plus.circle.fill")
                                 .font(.title2)
-                            Text("Add Container")
+                            Text(strings.addContainer)
                                 .font(.headline)
                         }
                         .frame(maxWidth: .infinity)
@@ -68,7 +70,7 @@ struct HomeView: View {
                         HStack {
                             Image(systemName: "viewfinder.circle.fill")
                                 .font(.title2)
-                            Text("Scan Container")
+                            Text(strings.scanContainer)
                                 .font(.headline)
                         }
                         .frame(maxWidth: .infinity)
@@ -92,7 +94,7 @@ struct HomeView: View {
                     } label: {
                         Image(systemName: "gearshape.fill")
                     }
-                    .accessibilityLabel("Settings")
+                    .accessibilityLabel(strings.settingsTitle)
                     .accessibilityIdentifier("home.settings")
                 }
             }
@@ -139,7 +141,7 @@ struct HomeView: View {
                             ProgressView()
                                 .scaleEffect(1.5)
                                 .tint(.white)
-                            Text("Loading container...")
+                            Text(strings.loadingContainer)
                                 .font(.headline)
                                 .foregroundColor(.white)
                         }
@@ -164,7 +166,7 @@ struct HomeView: View {
                         }
                         .toolbar {
                             ToolbarItem(placement: .cancellationAction) {
-                                Button("Done") {
+                                Button(strings.done) {
                                     showContainerDetail = false
                                 }
                             }
@@ -182,5 +184,7 @@ private struct AddFlowPresentation: Identifiable {
 }
 
 #Preview {
-    HomeView()
+    let settingsViewModel = SettingsViewModel()
+    HomeView(settingsViewModel: settingsViewModel)
+        .environmentObject(settingsViewModel)
 }

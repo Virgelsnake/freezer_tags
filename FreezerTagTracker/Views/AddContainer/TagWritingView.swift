@@ -2,6 +2,11 @@ import SwiftUI
 
 struct TagWritingView: View {
     @Environment(\.accessibilityReduceMotion) private var accessibilityReduceMotion
+    let language: AppLanguage
+
+    private var strings: AppStrings {
+        language.strings
+    }
 
     var body: some View {
         VStack(spacing: 24) {
@@ -13,25 +18,25 @@ struct TagWritingView: View {
                 .accessibilityHidden(true)
 
             VStack(spacing: 12) {
-                Text("Hold your phone near the tag")
+                Text(strings.holdPhoneNearTag)
                     .font(.largeTitle.weight(.bold))
                     .multilineTextAlignment(.center)
 
-                Text("Keep the top of your iPhone close to the container tag until you feel confirmation.")
+                Text(strings.holdPhoneNearTagSubtitle)
                     .font(.body)
                     .foregroundStyle(Color.secondary)
                     .multilineTextAlignment(.center)
             }
 
             if accessibilityReduceMotion {
-                Label("Writing in progress", systemImage: "hourglass")
+                Label(strings.writingInProgress, systemImage: "hourglass")
                     .font(.headline)
                     .foregroundStyle(Color.secondary)
-                    .accessibilityHint("Animation is reduced. Keep holding your phone near the tag.")
+                    .accessibilityHint(strings.reducedMotionWritingHint)
             } else {
                 ProgressView()
                     .controlSize(.large)
-                    .accessibilityLabel("Writing in progress")
+                    .accessibilityLabel(strings.writingInProgress)
             }
 
             Spacer()
@@ -46,5 +51,5 @@ struct TagWritingView: View {
 }
 
 #Preview {
-    TagWritingView()
+    TagWritingView(language: .english)
 }

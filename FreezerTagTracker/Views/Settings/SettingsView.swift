@@ -9,54 +9,71 @@ struct SettingsView: View {
     }
 
     var body: some View {
+        let strings = viewModel.strings
+
         Form {
-            Section("Guidance") {
-                Toggle("Spoken guidance", isOn: $viewModel.spokenGuidanceEnabled)
+            Section(strings.guidanceSectionTitle) {
+                Toggle(strings.spokenGuidance, isOn: $viewModel.spokenGuidanceEnabled)
                     .onChange(of: viewModel.spokenGuidanceEnabled) { _ in
                         viewModel.persistSettings()
                     }
 
-                Toggle("Spoken confirmations", isOn: $viewModel.spokenConfirmationsEnabled)
+                Toggle(strings.spokenConfirmations, isOn: $viewModel.spokenConfirmationsEnabled)
                     .onChange(of: viewModel.spokenConfirmationsEnabled) { _ in
                         viewModel.persistSettings()
                     }
 
-                Toggle("Haptics", isOn: $viewModel.hapticsEnabled)
+                Toggle(strings.haptics, isOn: $viewModel.hapticsEnabled)
                     .onChange(of: viewModel.hapticsEnabled) { _ in
                         viewModel.persistSettings()
                     }
 
-                Toggle("Show microphone shortcut", isOn: $viewModel.microphoneShortcutEnabled)
+                Toggle(strings.showMicrophoneShortcut, isOn: $viewModel.microphoneShortcutEnabled)
                     .accessibilityIdentifier("settings.microphoneShortcutToggle")
                     .onChange(of: viewModel.microphoneShortcutEnabled) { _ in
                         viewModel.persistSettings()
                     }
 
-                Toggle("Show Read details again button", isOn: $viewModel.showReadDetailsAgainButton)
+                Toggle(strings.showReadDetailsAgainButton, isOn: $viewModel.showReadDetailsAgainButton)
                     .accessibilityIdentifier("settings.readDetailsAgainToggle")
                     .onChange(of: viewModel.showReadDetailsAgainButton) { _ in
                         viewModel.persistSettings()
                     }
             }
 
-            Section("Food expiry presets") {
-                Text("These dates are suggested for best quality and can be changed.")
+            Section(strings.languageSectionTitle) {
+                Picker(strings.languagePickerLabel, selection: $viewModel.language) {
+                    ForEach(AppLanguage.allCases) { language in
+                        Text(strings.languageName(language)).tag(language)
+                    }
+                }
+                .onChange(of: viewModel.language) { _ in
+                    viewModel.persistSettings()
+                }
+
+                Text(strings.languagePickerDescription)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
+
+            Section(strings.foodExpiryPresetsSectionTitle) {
+                Text(strings.presetsDescription)
                     .font(.footnote)
                     .foregroundStyle(.secondary)
 
-                NavigationLink("Edit preset month values") {
+                NavigationLink(strings.editPresetMonthValues) {
                     FoodPresetEditorView(viewModel: viewModel)
                 }
             }
         }
-        .navigationTitle("Settings")
+        .navigationTitle(strings.settingsTitle)
         .navigationBarTitleDisplayMode(.inline)
         .onDisappear {
             viewModel.persistSettings()
         }
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
-                Button("Done") {
+                Button(strings.done) {
                     viewModel.persistSettings()
                     dismiss()
                 }

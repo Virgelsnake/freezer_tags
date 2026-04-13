@@ -32,10 +32,7 @@ struct ContainerSummaryCard: View {
             RoundedRectangle(cornerRadius: 24, style: .continuous)
                 .stroke(Color(.separator), lineWidth: 1)
         )
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("What will be saved")
-        .accessibilityValue(items.map { "\($0.title), \($0.value)" }.joined(separator: ", "))
-        .accessibilityHint("Review the saved details before writing to the tag.")
+        .accessibilityElement(children: .contain)
     }
 
     private func rowTitle(_ title: String) -> some View {

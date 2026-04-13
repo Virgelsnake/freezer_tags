@@ -19,7 +19,7 @@ final class SpeechToTextRecognizer: ObservableObject {
     let copy: Copy
 
     var buttonTitle: String {
-        isListening ? "Stop listening" : copy.idleButtonTitle
+        isListening ? AppLanguage.current.strings.stopListening : copy.idleButtonTitle
     }
 
     var buttonSystemImage: String {
@@ -41,20 +41,21 @@ final class SpeechToTextRecognizer: ObservableObject {
         var errorDescription: String? {
             switch self {
             case .microphoneInputUnavailable:
-                return "Microphone input is unavailable right now. Please try again on your iPhone."
+                return AppLanguage.current.strings.microphoneUnavailable
             }
         }
     }
 
     init(
         copy: Copy,
-        speechRecognizer: SFSpeechRecognizer? = SFSpeechRecognizer(locale: Locale.current),
+        locale: Locale = .current,
+        speechRecognizer: SFSpeechRecognizer? = nil,
         audioEngine: AVAudioEngine = AVAudioEngine(),
         audioSession: AVAudioSession = .sharedInstance(),
         environment: [String: String] = ProcessInfo.processInfo.environment
     ) {
         self.copy = copy
-        self.speechRecognizer = speechRecognizer
+        self.speechRecognizer = speechRecognizer ?? SFSpeechRecognizer(locale: locale)
         self.audioEngine = audioEngine
         self.audioSession = audioSession
         self.environment = environment
@@ -106,11 +107,11 @@ final class SpeechToTextRecognizer: ObservableObject {
 
     private func startListening(onTranscription: @escaping (String) -> Void) async {
         guard speechRecognizer != nil else {
-            presentError("Speech recognition is unavailable on this device.")
+            presentError(AppLanguage.current.strings.speechRecognitionUnavailable)
             return
         }
 
-        statusMessage = "Preparing microphone..."
+        statusMessage = AppLanguage.current.strings.preparingMicrophone
         isShowingError = false
 
         let speechAuthorization = await requestSpeechAuthorization()
@@ -130,7 +131,7 @@ final class SpeechToTextRecognizer: ObservableObject {
         do {
             try startRecognitionSession(onTranscription: onTranscription)
         } catch {
-            let message = (error as? LocalizedError)?.errorDescription ?? "We couldn't start listening right now. Please try again."
+            let message = (error as? LocalizedError)?.errorDescription ?? AppLanguage.current.strings.couldNotStartListening
             presentError(message)
         }
     }
@@ -228,19 +229,25 @@ final class SpeechToTextRecognizer: ObservableObject {
 }
 
 extension SpeechToTextRecognizer.Copy {
-    static let foodName = Self(
-        idleButtonTitle: "Speak food name",
-        listeningStatusMessage: "Listening for food name.",
-        speechPermissionMessage: "Allow speech recognition in Settings to use Speak food name.",
-        microphonePermissionMessage: "Allow microphone access in Settings to use Speak food name.",
-        uiTestTranscriptEnvironmentKey: "UITEST_SPOKEN_FOOD_NAME"
-    )
+    static func foodName(in language: AppLanguage) -> Self {
+        let strings = language.strings
+        return Self(
+            idleButtonTitle: strings.speakFoodName,
+            listeningStatusMessage: strings.listeningForFoodName,
+            speechPermissionMessage: strings.allowSpeechRecognitionForFoodName,
+            microphonePermissionMessage: strings.allowMicrophoneForFoodName,
+            uiTestTranscriptEnvironmentKey: "UITEST_SPOKEN_FOOD_NAME"
+        )
+    }
 
-    static let notes = Self(
-        idleButtonTitle: "Speak to add note",
-        listeningStatusMessage: "Listening for note.",
-        speechPermissionMessage: "Allow speech recognition in Settings to use Speak to add note.",
-        microphonePermissionMessage: "Allow microphone access in Settings to use Speak to add note.",
-        uiTestTranscriptEnvironmentKey: "UITEST_SPOKEN_NOTE"
-    )
+    static func notes(in language: AppLanguage) -> Self {
+        let strings = language.strings
+        return Self(
+            idleButtonTitle: strings.speakToAddNote,
+            listeningStatusMessage: strings.listeningForNote,
+            speechPermissionMessage: strings.allowSpeechRecognitionForNote,
+            microphonePermissionMessage: strings.allowMicrophoneForNote,
+            uiTestTranscriptEnvironmentKey: "UITEST_SPOKEN_NOTE"
+        )
+    }
 }

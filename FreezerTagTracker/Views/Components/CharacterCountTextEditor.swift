@@ -2,6 +2,7 @@ import SwiftUI
 
 struct CharacterCountTextEditor: View {
     @Binding var text: String
+    @EnvironmentObject private var settingsViewModel: SettingsViewModel
 
     let title: String?
     let accessibilityLabel: String
@@ -59,10 +60,10 @@ struct CharacterCountTextEditor: View {
                 }
             }
 
-            Text("\(text.count) of \(characterLimit) characters")
+            Text(settingsViewModel.strings.charactersCount(text.count, limit: characterLimit))
                 .font(.caption)
                 .foregroundStyle(text.count >= characterLimit ? Color.red : Color.secondary)
-                .accessibilityLabel("\(text.count) of \(characterLimit) characters")
+                .accessibilityLabel(settingsViewModel.strings.charactersCount(text.count, limit: characterLimit))
         }
         .accessibilityElement(children: .contain)
     }
@@ -73,8 +74,8 @@ struct CharacterCountTextEditor: View {
             .padding(.vertical, 10)
             .frame(minHeight: 132)
             .accessibilityLabel(accessibilityLabel)
-            .accessibilityValue(text.isEmpty ? "Empty" : text)
-            .accessibilityHint("Optional. Up to \(characterLimit) characters.")
+            .accessibilityValue(text.isEmpty ? settingsViewModel.strings.empty : text)
+            .accessibilityHint(settingsViewModel.strings.optionalUpToCharacters(characterLimit))
             .accessibilityIdentifier("addContainer.notesEditor")
             .onChange(of: text) { newValue in
                 guard newValue.count > characterLimit else {
@@ -93,5 +94,6 @@ struct CharacterCountTextEditor: View {
         placeholder: "Optional notes",
         characterLimit: 200
     )
+    .environmentObject(SettingsViewModel())
     .padding()
 }
