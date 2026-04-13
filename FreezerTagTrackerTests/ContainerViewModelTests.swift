@@ -56,6 +56,7 @@ final class ContainerViewModelTests: XCTestCase {
         viewModel.saveContainer(
             tagID: tagID,
             foodName: foodName,
+            foodCategory: .preparedMeal,
             dateFrozen: dateFrozen,
             notes: notes
         ) { result in
@@ -72,6 +73,7 @@ final class ContainerViewModelTests: XCTestCase {
         let saved = mockDataStore.fetch(byTagID: tagID)
         XCTAssertNotNil(saved)
         XCTAssertEqual(saved?.foodName, foodName)
+        XCTAssertEqual(saved?.foodCategory, .preparedMeal)
         XCTAssertEqual(saved?.notes, notes)
     }
     

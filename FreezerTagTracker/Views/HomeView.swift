@@ -2,12 +2,23 @@ import SwiftUI
 import Combine
 
 struct HomeView: View {
-    @StateObject private var viewModel = ContainerViewModel()
+    @StateObject private var viewModel: ContainerViewModel
     @StateObject private var nfcManager = NFCManager.shared
+    @StateObject private var settingsViewModel: SettingsViewModel
     @State private var showScanSheet = false
     @State private var scannedContainer: ContainerRecord?
     @State private var showContainerDetail = false
     @State private var waitingForNFCDismissal = false
+    @State private var showSettings = false
+    @State private var addFlowPresentation: AddFlowPresentation?
+
+    init(
+        viewModel: ContainerViewModel = ContainerViewModel(),
+        settingsViewModelFactory: @escaping () -> SettingsViewModel = { SettingsViewModel() }
+    ) {
+        _viewModel = StateObject(wrappedValue: viewModel)
+        _settingsViewModel = StateObject(wrappedValue: settingsViewModelFactory())
+    }
     
     var body: some View {
         NavigationView {
@@ -33,7 +44,9 @@ struct HomeView: View {
                 Spacer()
                 
                 VStack(spacing: 20) {
-                    NavigationLink(destination: AddContainerView(viewModel: viewModel)) {
+                    Button {
+                        addFlowPresentation = AddFlowPresentation(settings: settingsViewModel.currentSettings)
+                    } label: {
                         HStack {
                             Image(systemName: "plus.circle.fill")
                                 .font(.title2)
@@ -46,6 +59,7 @@ struct HomeView: View {
                         .foregroundStyle(.white)
                         .cornerRadius(12)
                     }
+                    .accessibilityIdentifier("home.addContainer")
                     
                     Button(action: {
                         print("⏱️ HomeView: Scan Container button tapped")
@@ -71,6 +85,17 @@ struct HomeView: View {
             }
             .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        showSettings = true
+                    } label: {
+                        Image(systemName: "gearshape.fill")
+                    }
+                    .accessibilityLabel("Settings")
+                    .accessibilityIdentifier("home.settings")
+                }
+            }
             .sheet(isPresented: $showScanSheet) {
                 ScanView(viewModel: viewModel) { container in
                     print("⏱️ HomeView TIMING: onScanSuccess callback received")
@@ -85,6 +110,19 @@ struct HomeView: View {
                     print("⏱️ HomeView TIMING: NFC session fully dismissed, now showing container detail")
                     waitingForNFCDismissal = false
                     showContainerDetail = true
+                }
+            }
+            .sheet(isPresented: $showSettings) {
+                NavigationView {
+                    SettingsView(viewModel: settingsViewModel)
+                }
+            }
+            .sheet(item: $addFlowPresentation) { presentation in
+                NavigationView {
+                    AddContainerView(
+                        viewModel: viewModel,
+                        settingsSnapshot: presentation.settings
+                    )
                 }
             }
         }
@@ -120,7 +158,7 @@ struct HomeView: View {
         }) {
             if let container = scannedContainer {
                 NavigationView {
-                    ContainerDetailView(container: container, viewModel: viewModel)
+                    ContainerDetailView(initialContainer: container, viewModel: viewModel)
                         .onAppear {
                             print("⏱️ HomeView TIMING: ContainerDetailView appeared")
                         }
@@ -136,6 +174,11 @@ struct HomeView: View {
             }
         }
     }
+}
+
+private struct AddFlowPresentation: Identifiable {
+    let id = UUID()
+    let settings: AddContainerSettings
 }
 
 #Preview {

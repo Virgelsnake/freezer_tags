@@ -37,12 +37,22 @@ class DataStore {
                 throw DataStoreError.duplicateTagID
             }
             
-            let entity = ContainerEntity(context: context)
+            guard let entityDescription = NSEntityDescription.entity(forEntityName: "ContainerEntity", in: context) else {
+                throw DataStoreError.saveFailed(NSError(
+                    domain: "DataStore",
+                    code: 2,
+                    userInfo: [NSLocalizedDescriptionKey: "ContainerEntity description could not be loaded."]
+                ))
+            }
+
+            let entity = ContainerEntity(entity: entityDescription, insertInto: context)
             entity.id = record.id
             entity.tagID = record.tagID
             entity.foodName = record.foodName
+            entity.foodCategory = record.foodCategory?.rawValue
             entity.dateFrozen = record.dateFrozen
             entity.notes = record.notes
+            entity.bestBeforeDate = record.bestBeforeDate
             entity.isCleared = record.isCleared
             entity.createdAt = record.createdAt
             entity.updatedAt = record.updatedAt
@@ -100,26 +110,35 @@ class DataStore {
     }
     
     func update(record: ContainerRecord) throws {
+        print("💾 DataStore: update() called with id=\(record.id), foodName=\(record.foodName)")
         let fetchRequest: NSFetchRequest<ContainerEntity> = ContainerEntity.fetchRequest()
         fetchRequest.predicate = NSPredicate(format: "id == %@", record.id as CVarArg)
         fetchRequest.fetchLimit = 1
         
         do {
             let results = try context.fetch(fetchRequest)
+            print("💾 DataStore: Fetch returned \(results.count) results")
             guard let entity = results.first else {
+                print("❌ DataStore: No entity found for id=\(record.id)")
                 throw DataStoreError.recordNotFound
             }
             
+            print("💾 DataStore: Found entity, updating fields")
             entity.foodName = record.foodName
+            entity.foodCategory = record.foodCategory?.rawValue
             entity.dateFrozen = record.dateFrozen
             entity.notes = record.notes
+            entity.bestBeforeDate = record.bestBeforeDate
             entity.isCleared = record.isCleared
             entity.updatedAt = Date()
             
             try context.save()
+            print("✅ DataStore: context.save() succeeded")
         } catch let error as DataStoreError {
+            print("❌ DataStore: Update failed with DataStoreError - \(error)")
             throw error
         } catch {
+            print("❌ DataStore: Update failed - \(error.localizedDescription)")
             throw DataStoreError.updateFailed(error)
         }
     }
@@ -180,8 +199,10 @@ class DataStore {
             id: id,
             tagID: tagID,
             foodName: foodName,
+            foodCategory: entity.foodCategory.flatMap(FoodCategory.init(rawValue:)),
             dateFrozen: dateFrozen,
             notes: entity.notes,
+            bestBeforeDate: entity.bestBeforeDate,
             isCleared: entity.isCleared,
             createdAt: createdAt,
             updatedAt: updatedAt

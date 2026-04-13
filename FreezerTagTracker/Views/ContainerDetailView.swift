@@ -1,11 +1,16 @@
 import SwiftUI
 
 struct ContainerDetailView: View {
-    let container: ContainerRecord
+    let initialContainer: ContainerRecord
     @ObservedObject var viewModel: ContainerViewModel
     @Environment(\.dismiss) private var dismiss
     @State private var showingClearConfirmation = false
     @State private var isClearing = false
+    @State private var showingEditView = false
+    
+    private var container: ContainerRecord {
+        viewModel.containers.first { $0.id == initialContainer.id } ?? initialContainer
+    }
     
     var body: some View {
         List {
@@ -35,6 +40,34 @@ struct ContainerDetailView: View {
                             .foregroundStyle(.secondary)
                         Text(container.daysFrozenDescription)
                             .font(.subheadline)
+                    }
+                    
+                    if let formattedDate = container.formattedBestBeforeDate {
+                        Divider()
+                        
+                        HStack {
+                            Image(systemName: bestBeforeIcon)
+                                .foregroundStyle(bestBeforeColor)
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Best Before")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                Text(formattedDate)
+                                    .font(.subheadline)
+                                    .fontWeight(.medium)
+                                    .foregroundStyle(bestBeforeColor)
+                            }
+                            
+                            Spacer()
+                            
+                            if container.bestBeforeStatus != .fresh {
+                                bestBeforeStatusBadge
+                            }
+                        }
+                        .padding(.vertical, 4)
+                        .padding(.horizontal, 8)
+                        .background(bestBeforeBackgroundColor)
+                        .cornerRadius(8)
                     }
                 }
                 .padding(.vertical, 8)
@@ -73,11 +106,17 @@ struct ContainerDetailView: View {
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Menu {
-                    NavigationLink(destination: EditContainerView(container: container, viewModel: viewModel)) {
+                    Button(action: {
+                        print("🟠 ContainerDetailView: Edit button tapped")
+                        showingEditView = true
+                    }) {
                         Label("Edit", systemImage: "pencil")
                     }
                     
-                    Button(role: .destructive, action: { showingClearConfirmation = true }) {
+                    Button(role: .destructive, action: { 
+                        print("🟠 ContainerDetailView: Clear & Reuse button tapped")
+                        showingClearConfirmation = true 
+                    }) {
                         Label("Clear & Reuse", systemImage: "trash")
                     }
                 } label: {
@@ -85,6 +124,15 @@ struct ContainerDetailView: View {
                 }
             }
         }
+        .background(
+            NavigationLink(
+                destination: EditContainerView(container: initialContainer, viewModel: viewModel),
+                isActive: $showingEditView
+            ) {
+                EmptyView()
+            }
+            .hidden()
+        )
         .confirmationDialog("Clear Container", isPresented: $showingClearConfirmation) {
             Button("Clear & Reuse", role: .destructive) {
                 clearContainer()
@@ -98,7 +146,7 @@ struct ContainerDetailView: View {
     private func clearContainer() {
         isClearing = true
         
-        viewModel.clearContainer(tagID: container.tagID) { result in
+        viewModel.clearContainer(tagID: initialContainer.tagID) { result in
             isClearing = false
             
             switch result {
@@ -109,12 +157,75 @@ struct ContainerDetailView: View {
             }
         }
     }
+    
+    private var bestBeforeColor: Color {
+        switch container.bestBeforeStatus {
+        case .none, .fresh:
+            return .secondary
+        case .approaching:
+            return .orange
+        case .expired:
+            return .red
+        }
+    }
+    
+    private var bestBeforeBackgroundColor: Color {
+        switch container.bestBeforeStatus {
+        case .none, .fresh:
+            return Color.clear
+        case .approaching:
+            return Color.orange.opacity(0.1)
+        case .expired:
+            return Color.red.opacity(0.1)
+        }
+    }
+    
+    private var bestBeforeIcon: String {
+        switch container.bestBeforeStatus {
+        case .none, .fresh:
+            return "calendar.badge.checkmark"
+        case .approaching:
+            return "exclamationmark.triangle.fill"
+        case .expired:
+            return "xmark.circle.fill"
+        }
+    }
+    
+    @ViewBuilder
+    private var bestBeforeStatusBadge: some View {
+        switch container.bestBeforeStatus {
+        case .approaching:
+            if let days = container.daysUntilBestBefore {
+                Text("\(days)d left")
+                    .font(.caption2)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Color.orange)
+                    .cornerRadius(12)
+            }
+        case .expired:
+            if let days = container.daysUntilBestBefore {
+                Text("\(abs(days))d ago")
+                    .font(.caption2)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Color.red)
+                    .cornerRadius(12)
+            }
+        default:
+            EmptyView()
+        }
+    }
 }
 
 #Preview {
     NavigationView {
         ContainerDetailView(
-            container: ContainerRecord(
+            initialContainer: ContainerRecord(
                 tagID: "test-tag-123",
                 foodName: "Chicken Soup",
                 dateFrozen: Calendar.current.date(byAdding: .day, value: -3, to: Date())!,

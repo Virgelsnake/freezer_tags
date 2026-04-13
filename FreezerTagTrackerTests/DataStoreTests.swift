@@ -53,6 +53,21 @@ final class DataStoreTests: XCTestCase {
         XCTAssertEqual(fetched?.foodName, "Beef Stew")
         XCTAssertEqual(fetched?.tagID, "tag-001")
     }
+
+    func testSaveAndFetchPreservesFoodCategory() throws {
+        let record = ContainerRecord(
+            tagID: "tag-category",
+            foodName: "Beef Stew",
+            foodCategory: .beef,
+            dateFrozen: Date(),
+            notes: nil
+        )
+
+        try dataStore.save(record: record)
+
+        let fetched = dataStore.fetch(byTagID: "tag-category")
+        XCTAssertEqual(fetched?.foodCategory, .beef)
+    }
     
     func testFetchAllContainers() throws {
         let record1 = ContainerRecord(

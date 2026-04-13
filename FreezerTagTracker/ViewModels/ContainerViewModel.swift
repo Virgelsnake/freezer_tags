@@ -9,11 +9,34 @@ class ContainerViewModel: ObservableObject {
     
     private let dataStore: DataStore
     private let nfcManager: NFCManager
+    private let addContainerTagWriter: TagWriting
+    private let addContainerSettingsStore: AddContainerSettingsProviding
     
-    init(dataStore: DataStore = .shared, nfcManager: NFCManager = .shared) {
+    init(
+        dataStore: DataStore = .shared,
+        nfcManager: NFCManager = .shared,
+        addContainerTagWriter: TagWriting? = nil,
+        addContainerSettingsStore: AddContainerSettingsProviding = AddContainerSettingsStore()
+    ) {
         self.dataStore = dataStore
         self.nfcManager = nfcManager
+        self.addContainerTagWriter = addContainerTagWriter ?? nfcManager
+        self.addContainerSettingsStore = addContainerSettingsStore
         loadContainers()
+    }
+
+    func makeAddContainerFlowViewModel(
+        draft: AddContainerDraft = AddContainerDraft(),
+        initialSettings: AddContainerSettings? = nil
+    ) -> AddContainerFlowViewModel {
+        AddContainerFlowViewModel(
+            draft: draft,
+            initialSettings: initialSettings,
+            presetProvider: addContainerSettingsStore,
+            settingsStore: addContainerSettingsStore,
+            tagWriter: addContainerTagWriter,
+            recordStore: dataStore
+        )
     }
     
     func loadContainers() {
@@ -23,15 +46,19 @@ class ContainerViewModel: ObservableObject {
     func saveContainer(
         tagID: String,
         foodName: String,
+        foodCategory: FoodCategory? = nil,
         dateFrozen: Date,
         notes: String?,
+        bestBeforeDate: Date? = nil,
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
         let record = ContainerRecord(
             tagID: tagID,
             foodName: foodName,
+            foodCategory: foodCategory,
             dateFrozen: dateFrozen,
-            notes: notes
+            notes: notes,
+            bestBeforeDate: bestBeforeDate
         )
         
         guard record.isValid else {
@@ -50,27 +77,38 @@ class ContainerViewModel: ObservableObject {
     
     func saveContainerWithNFC(
         foodName: String,
+        foodCategory: FoodCategory? = nil,
         dateFrozen: Date,
         notes: String?,
+        bestBeforeDate: Date? = nil,
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
+        print("🔵 ViewModel: saveContainerWithNFC called")
+        print("🔵 ViewModel: foodName=\(foodName), bestBeforeDate=\(String(describing: bestBeforeDate))")
         setLoading(true)
         
         let tagID = UUID().uuidString
         let record = ContainerRecord(
             tagID: tagID,
             foodName: foodName,
+            foodCategory: foodCategory,
             dateFrozen: dateFrozen,
-            notes: notes
+            notes: notes,
+            bestBeforeDate: bestBeforeDate
         )
         
+        print("🔵 ViewModel: Created record with tagID=\(tagID)")
+        
         guard record.isValid else {
+            print("❌ ViewModel: Record validation failed")
             setLoading(false)
             completion(.failure(DataStoreError.saveFailed(NSError(domain: "Validation", code: 1, userInfo: [NSLocalizedDescriptionKey: "Invalid container data"]))))
             return
         }
         
+        print("✅ ViewModel: Record is valid, calling nfcManager.writeTag")
         nfcManager.writeTag(record: record) { [weak self] result in
+            print("🔵 ViewModel: writeTag callback received with result: \(result)")
             guard let self = self else { return }
             
             DispatchQueue.main.async {
@@ -135,16 +173,21 @@ class ContainerViewModel: ObservableObject {
     }
     
     func updateContainer(record: ContainerRecord, completion: @escaping (Result<Void, Error>) -> Void) {
+        print("🔵 ViewModel: updateContainer called with id=\(record.id), foodName=\(record.foodName)")
         guard record.isValid else {
+            print("❌ ViewModel: Record validation failed - isValid=false")
             completion(.failure(DataStoreError.updateFailed(NSError(domain: "Validation", code: 1, userInfo: [NSLocalizedDescriptionKey: "Invalid container data"]))))
             return
         }
         
+        print("🔵 ViewModel: Record is valid, calling dataStore.update")
         do {
             try dataStore.update(record: record)
+            print("✅ ViewModel: dataStore.update succeeded, reloading containers")
             loadContainers()
             completion(.success(()))
         } catch {
+            print("❌ ViewModel: dataStore.update failed - \(error.localizedDescription)")
             completion(.failure(error))
         }
     }

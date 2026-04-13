@@ -2,132 +2,29 @@ import SwiftUI
 
 struct AddContainerView: View {
     @ObservedObject var viewModel: ContainerViewModel
+    let settingsSnapshot: AddContainerSettings?
     @Environment(\.dismiss) private var dismiss
-    
-    @State private var foodName = ""
-    @State private var dateFrozen = Date()
-    @State private var notes = ""
-    @State private var showingValidationError = false
-    @State private var validationMessage = ""
-    @State private var isSaving = false
-    
-    private var isValid: Bool {
-        !foodName.trimmingCharacters(in: .whitespaces).isEmpty && notes.count <= 200
-    }
-    
-    private var remainingCharacters: Int {
-        200 - notes.count
-    }
-    
+
     var body: some View {
-        Form {
-            Section {
-                TextField("Food Name", text: $foodName)
-                    .autocorrectionDisabled()
-                
-                DatePicker("Date Frozen", selection: $dateFrozen, displayedComponents: .date)
-            } header: {
-                Text("Container Information")
-            }
-            
-            Section {
-                ZStack(alignment: .topLeading) {
-                    if notes.isEmpty {
-                        Text("Optional notes (e.g., ingredients, portions)")
-                            .foregroundStyle(.secondary)
-                            .padding(.top, 8)
-                            .padding(.leading, 4)
-                    }
-                    
-                    TextEditor(text: $notes)
-                        .frame(minHeight: 100)
-                        .onChange(of: notes) { newValue in
-                            if newValue.count > 200 {
-                                notes = String(newValue.prefix(200))
-                            }
-                        }
-                }
-                
-                HStack {
-                    Spacer()
-                    Text("\(remainingCharacters) characters remaining")
-                        .font(.caption)
-                        .foregroundStyle(remainingCharacters < 20 ? .red : .secondary)
-                }
-            } header: {
-                Text("Notes (Optional)")
-            }
-            
-            Section {
-                Button(action: saveAndScan) {
-                    HStack {
-                        if isSaving {
-                            ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle())
-                        } else {
-                            Image(systemName: "wave.3.right.circle.fill")
-                        }
-                        Text(isSaving ? "Scanning..." : "Save & Scan Tag")
-                            .fontWeight(.semibold)
-                    }
-                    .frame(maxWidth: .infinity)
-                }
-                .disabled(!isValid || isSaving)
-            }
-        }
-        .navigationTitle("Add Container")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-                Button("Cancel") {
-                    dismiss()
-                }
-            }
-        }
-        .alert("Validation Error", isPresented: $showingValidationError) {
-            Button("OK", role: .cancel) { }
-        } message: {
-            Text(validationMessage)
-        }
+        AddContainerFlowView(
+            viewModel: viewModel.makeAddContainerFlowViewModel(initialSettings: settingsSnapshot),
+            onCancel: { dismiss() },
+            onComplete: finishFlow
+        )
+        .navigationBarBackButtonHidden(true)
     }
-    
-    private func saveAndScan() {
-        let trimmedFoodName = foodName.trimmingCharacters(in: .whitespaces)
-        
-        guard !trimmedFoodName.isEmpty else {
-            validationMessage = "Please enter a food name"
-            showingValidationError = true
-            return
-        }
-        
-        guard notes.count <= 200 else {
-            validationMessage = "Notes must be 200 characters or less"
-            showingValidationError = true
-            return
-        }
-        
-        isSaving = true
-        
-        viewModel.saveContainerWithNFC(
-            foodName: trimmedFoodName,
-            dateFrozen: dateFrozen,
-            notes: notes.isEmpty ? nil : notes
-        ) { result in
-            isSaving = false
-            
-            switch result {
-            case .success:
-                dismiss()
-            case .failure(let error):
-                validationMessage = error.localizedDescription
-                showingValidationError = true
-            }
-        }
+
+    private func finishFlow() {
+        viewModel.loadContainers()
+        dismiss()
     }
 }
 
 #Preview {
     NavigationView {
-        AddContainerView(viewModel: ContainerViewModel(dataStore: DataStore(inMemory: true)))
+        AddContainerView(
+            viewModel: ContainerViewModel(dataStore: DataStore(inMemory: true)),
+            settingsSnapshot: nil
+        )
     }
 }
