@@ -241,4 +241,109 @@ final class ContainerViewModelTests: XCTestCase {
         
         waitForExpectations(timeout: 1.0)
     }
+
+    func testHandleScanScreenAppearedSpeaksReadyToScanWhenVoiceOverIsOff() {
+        let speech = RecordingSpokenFeedbackService()
+        let announcements = RecordingAccessibilityAnnouncementService()
+        let viewModel = ContainerViewModel(
+            dataStore: mockDataStore,
+            addContainerSettingsStore: InMemoryAddContainerSettingsStore(),
+            spokenFeedbackService: speech,
+            accessibilityAnnouncementService: announcements,
+            accessibilityStatusProvider: StubAccessibilityStatusProvider(isVoiceOverRunning: false)
+        )
+
+        viewModel.handleScanScreenAppeared()
+
+        XCTAssertEqual(speech.messages, [ContainerViewModel.readyToScanGuidanceMessage])
+        XCTAssertEqual(announcements.messages, [])
+    }
+
+    func testHandleScanScreenAppearedUsesVoiceOverAnnouncementWhenVoiceOverIsOn() {
+        let speech = RecordingSpokenFeedbackService()
+        let announcements = RecordingAccessibilityAnnouncementService()
+        let viewModel = ContainerViewModel(
+            dataStore: mockDataStore,
+            addContainerSettingsStore: InMemoryAddContainerSettingsStore(),
+            spokenFeedbackService: speech,
+            accessibilityAnnouncementService: announcements,
+            accessibilityStatusProvider: StubAccessibilityStatusProvider(isVoiceOverRunning: true)
+        )
+
+        viewModel.handleScanScreenAppeared()
+
+        XCTAssertEqual(speech.messages, [])
+        XCTAssertEqual(announcements.messages, [ContainerViewModel.readyToScanGuidanceMessage])
+    }
+
+    func testHandleScanScreenAppearedRespectsSpokenGuidanceSetting() {
+        let speech = RecordingSpokenFeedbackService()
+        let announcements = RecordingAccessibilityAnnouncementService()
+        let viewModel = ContainerViewModel(
+            dataStore: mockDataStore,
+            addContainerSettingsStore: InMemoryAddContainerSettingsStore(
+                settings: AddContainerSettings(spokenGuidanceEnabled: false)
+            ),
+            spokenFeedbackService: speech,
+            accessibilityAnnouncementService: announcements,
+            accessibilityStatusProvider: StubAccessibilityStatusProvider(isVoiceOverRunning: false)
+        )
+
+        viewModel.handleScanScreenAppeared()
+
+        XCTAssertEqual(speech.messages, [])
+        XCTAssertEqual(announcements.messages, [])
+    }
+}
+
+private final class InMemoryAddContainerSettingsStore: AddContainerSettingsProviding {
+    private var settings: AddContainerSettings
+
+    init(settings: AddContainerSettings = AddContainerSettings()) {
+        self.settings = settings
+    }
+
+    func load() -> AddContainerSettings {
+        settings
+    }
+
+    func save(_ settings: AddContainerSettings) {
+        self.settings = settings
+    }
+
+    func preset(for category: FoodCategory) -> FoodCategoryPreset {
+        presets().first(where: { $0.category == category })!
+    }
+
+    func presets() -> [FoodCategoryPreset] {
+        let overrides = settings.presetOverrides
+
+        return AddContainerSettingsStore.defaultPresets.map { preset in
+            FoodCategoryPreset(
+                category: preset.category,
+                displayName: preset.displayName,
+                recommendedStorageMonths: overrides[preset.category] ?? preset.recommendedStorageMonths
+            )
+        }
+    }
+}
+
+private final class RecordingSpokenFeedbackService: SpokenFeedbackServing {
+    private(set) var messages: [String] = []
+
+    func speak(_ message: String) {
+        messages.append(message)
+    }
+}
+
+private final class RecordingAccessibilityAnnouncementService: AccessibilityAnnouncementServing {
+    private(set) var messages: [String] = []
+
+    func announce(_ message: String) {
+        messages.append(message)
+    }
+}
+
+private struct StubAccessibilityStatusProvider: AccessibilityStatusProviding {
+    let isVoiceOverRunning: Bool
 }

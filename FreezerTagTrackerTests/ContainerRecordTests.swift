@@ -209,6 +209,46 @@ final class ContainerRecordTests: XCTestCase {
 
         XCTAssertEqual(decodedRecord.foodCategory, FoodCategory.beef)
     }
+
+    func testSpokenSummaryIncludesKeyDetailsAndNotes() {
+        let calendar = Calendar(identifier: .gregorian)
+        let frozenDate = calendar.date(from: DateComponents(year: 2026, month: 4, day: 13))!
+        let bestBeforeDate = calendar.date(from: DateComponents(year: 2026, month: 8, day: 13))!
+        let record = ContainerRecord(
+            tagID: "test-tag",
+            foodName: "Spaghetti Bolognese",
+            foodCategory: .beef,
+            dateFrozen: frozenDate,
+            notes: "This is three portions",
+            bestBeforeDate: bestBeforeDate
+        )
+
+        let summary = record.spokenSummary(relativeTo: frozenDate, calendar: calendar)
+
+        XCTAssertEqual(
+            summary,
+            "Spaghetti Bolognese. Food type Beef. Frozen today. Best quality by 13 Aug 2026. Notes: This is three portions."
+        )
+    }
+
+    func testSpokenSummaryFallsBackWhenBestBeforeDateAndNotesAreMissing() {
+        let calendar = Calendar(identifier: .gregorian)
+        let frozenDate = calendar.date(from: DateComponents(year: 2026, month: 4, day: 10))!
+        let referenceDate = calendar.date(from: DateComponents(year: 2026, month: 4, day: 13))!
+        let record = ContainerRecord(
+            tagID: "test-tag",
+            foodName: "Vegetable soup",
+            dateFrozen: frozenDate,
+            notes: "   "
+        )
+
+        let summary = record.spokenSummary(relativeTo: referenceDate, calendar: calendar)
+
+        XCTAssertEqual(
+            summary,
+            "Vegetable soup. Frozen 10 Apr 2026. No best-quality date set."
+        )
+    }
     
     func testHashableConformance() throws {
         let tagID = "test-tag"

@@ -12,6 +12,7 @@ struct ScanView: View {
     @State private var scanState: ScanState = .scanning
     @State private var hasScanned = false
     @State private var scanCompleted = false
+    @State private var hasAnnouncedReadyToScan = false
     
     /// Callback when scan succeeds with a container
     var onScanSuccess: ((ContainerRecord) -> Void)?
@@ -71,11 +72,21 @@ struct ScanView: View {
         .onAppear {
             print("⏱️ ScanView TIMING: onAppear called - hasScanned=\(hasScanned), scanCompleted=\(scanCompleted)")
             if !hasScanned && !scanCompleted {
+                announceReadyToScanIfNeeded()
                 startScanning()
             } else {
                 print("⚠️ ScanView: Skipping scan - already scanned or completed")
             }
         }
+    }
+
+    private func announceReadyToScanIfNeeded() {
+        guard !hasAnnouncedReadyToScan else {
+            return
+        }
+
+        hasAnnouncedReadyToScan = true
+        viewModel.handleScanScreenAppeared()
     }
     
     private func startScanning() {

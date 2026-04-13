@@ -7,6 +7,28 @@ struct ContainerDetailView: View {
     @State private var showingClearConfirmation = false
     @State private var isClearing = false
     @State private var showingEditView = false
+    @State private var hasSpokenSummary = false
+
+    private let settingsStore: AddContainerSettingsProviding
+    private let spokenFeedbackService: SpokenFeedbackServing
+    private let accessibilityAnnouncementService: AccessibilityAnnouncementServing
+    private let accessibilityStatusProvider: AccessibilityStatusProviding
+
+    init(
+        initialContainer: ContainerRecord,
+        viewModel: ContainerViewModel,
+        settingsStore: AddContainerSettingsProviding = AddContainerSettingsStore(),
+        spokenFeedbackService: SpokenFeedbackServing = SpokenFeedbackService(),
+        accessibilityAnnouncementService: AccessibilityAnnouncementServing = AccessibilityAnnouncementService(),
+        accessibilityStatusProvider: AccessibilityStatusProviding = SystemAccessibilityStatusProvider()
+    ) {
+        self.initialContainer = initialContainer
+        self.viewModel = viewModel
+        self.settingsStore = settingsStore
+        self.spokenFeedbackService = spokenFeedbackService
+        self.accessibilityAnnouncementService = accessibilityAnnouncementService
+        self.accessibilityStatusProvider = accessibilityStatusProvider
+    }
     
     private var container: ContainerRecord {
         viewModel.containers.first { $0.id == initialContainer.id } ?? initialContainer
@@ -141,6 +163,9 @@ struct ContainerDetailView: View {
         } message: {
             Text("This will mark the container as empty and ready for reuse. The tag can be rewritten with new information.")
         }
+        .onAppear {
+            speakSummaryIfNeeded()
+        }
     }
     
     private func clearContainer() {
@@ -218,6 +243,26 @@ struct ContainerDetailView: View {
             }
         default:
             EmptyView()
+        }
+    }
+
+    private func speakSummaryIfNeeded() {
+        guard !hasSpokenSummary else {
+            return
+        }
+
+        hasSpokenSummary = true
+
+        let settings = settingsStore.load()
+        guard settings.spokenGuidanceEnabled else {
+            return
+        }
+
+        let message = container.spokenSummary()
+        if accessibilityStatusProvider.isVoiceOverRunning {
+            accessibilityAnnouncementService.announce(message)
+        } else {
+            spokenFeedbackService.speak(message)
         }
     }
 }

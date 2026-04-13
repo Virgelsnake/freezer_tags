@@ -11,19 +11,30 @@ class ContainerViewModel: ObservableObject {
     private let nfcManager: NFCManager
     private let addContainerTagWriter: TagWriting
     private let addContainerSettingsStore: AddContainerSettingsProviding
+    private let spokenFeedbackService: SpokenFeedbackServing
+    private let accessibilityAnnouncementService: AccessibilityAnnouncementServing
+    private let accessibilityStatusProvider: AccessibilityStatusProviding
     
     init(
         dataStore: DataStore = .shared,
         nfcManager: NFCManager = .shared,
         addContainerTagWriter: TagWriting? = nil,
-        addContainerSettingsStore: AddContainerSettingsProviding = AddContainerSettingsStore()
+        addContainerSettingsStore: AddContainerSettingsProviding = AddContainerSettingsStore(),
+        spokenFeedbackService: SpokenFeedbackServing = SpokenFeedbackService(),
+        accessibilityAnnouncementService: AccessibilityAnnouncementServing = AccessibilityAnnouncementService(),
+        accessibilityStatusProvider: AccessibilityStatusProviding = SystemAccessibilityStatusProvider()
     ) {
         self.dataStore = dataStore
         self.nfcManager = nfcManager
         self.addContainerTagWriter = addContainerTagWriter ?? nfcManager
         self.addContainerSettingsStore = addContainerSettingsStore
+        self.spokenFeedbackService = spokenFeedbackService
+        self.accessibilityAnnouncementService = accessibilityAnnouncementService
+        self.accessibilityStatusProvider = accessibilityStatusProvider
         loadContainers()
     }
+
+    static let readyToScanGuidanceMessage = "Ready to scan. Hold your iPhone near the container tag."
 
     func makeAddContainerFlowViewModel(
         draft: AddContainerDraft = AddContainerDraft(),
@@ -165,6 +176,19 @@ class ContainerViewModel: ObservableObject {
                     completion(.failure(error))
                 }
             }
+        }
+    }
+
+    func handleScanScreenAppeared() {
+        let settings = addContainerSettingsStore.load()
+        guard settings.spokenGuidanceEnabled else {
+            return
+        }
+
+        if accessibilityStatusProvider.isVoiceOverRunning {
+            accessibilityAnnouncementService.announce(Self.readyToScanGuidanceMessage)
+        } else {
+            spokenFeedbackService.speak(Self.readyToScanGuidanceMessage)
         }
     }
     

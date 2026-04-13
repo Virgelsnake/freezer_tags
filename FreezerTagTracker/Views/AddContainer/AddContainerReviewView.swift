@@ -37,12 +37,15 @@ struct AddContainerReviewView: View {
                 .accessibilityElement(children: .contain)
                 .accessibilitySortPriority(2)
 
-                VStack(alignment: .leading, spacing: 14) {
+                VStack(alignment: .leading, spacing: 12) {
                     if canReadDetailsAgain {
-                        Button("Read details again", action: onReadDetailsAgain)
-                            .font(.body.weight(.semibold))
-                            .foregroundStyle(Color.secondary)
-                            .frame(maxWidth: .infinity, alignment: .center)
+                        Button(action: onReadDetailsAgain) {
+                            reviewSecondaryActionLabel(
+                                title: "Read details again",
+                                systemImage: "speaker.wave.2.fill"
+                            )
+                        }
+                            .buttonStyle(ReviewSecondaryActionButtonStyle())
                             .accessibilityHint("Speaks the details that will be written to the tag.")
                             .accessibilityIdentifier("addContainer.reviewReadDetailsAgainButton")
                     }
@@ -64,10 +67,13 @@ struct AddContainerReviewView: View {
                     .accessibilityHint("Starts the tag writing step.")
                     .accessibilityIdentifier("addContainer.writeButton")
 
-                    Button("Go back and change", action: onGoBack)
-                        .font(.body.weight(.semibold))
-                        .foregroundStyle(Color.secondary)
-                        .frame(maxWidth: .infinity, alignment: .center)
+                    Button(action: onGoBack) {
+                        reviewSecondaryActionLabel(
+                            title: "Go back and change",
+                            systemImage: "arrow.uturn.backward"
+                        )
+                    }
+                        .buttonStyle(ReviewSecondaryActionButtonStyle())
                         .accessibilityHint("Returns to the previous screen to edit the details.")
                         .accessibilityIdentifier("addContainer.goBackAndChangeButton")
                 }
@@ -81,6 +87,19 @@ struct AddContainerReviewView: View {
         .navigationBarBackButtonHidden(true)
         .onAppear(perform: onAppear)
     }
+
+    @ViewBuilder
+    private func reviewSecondaryActionLabel(title: String, systemImage: String) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: systemImage)
+                .font(.body.weight(.semibold))
+
+            Text(title)
+                .font(.headline)
+        }
+        .foregroundStyle(Color.blue)
+        .frame(maxWidth: .infinity, minHeight: 60)
+    }
 }
 
 private struct ReviewPrimaryActionButtonStyle: ButtonStyle {
@@ -92,6 +111,21 @@ private struct ReviewPrimaryActionButtonStyle: ButtonStyle {
                     .fill(configuration.isPressed ? Color.blue.opacity(0.85) : Color.blue)
             )
             .opacity(configuration.isPressed ? 0.92 : 1)
+    }
+}
+
+private struct ReviewSecondaryActionButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .background(
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .fill(Color.blue.opacity(configuration.isPressed ? 0.18 : 0.12))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .stroke(Color.blue.opacity(0.35), lineWidth: 1)
+            )
+            .opacity(configuration.isPressed ? 0.9 : 1)
     }
 }
 

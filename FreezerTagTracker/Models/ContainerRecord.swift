@@ -113,4 +113,45 @@ struct ContainerRecord: Identifiable, Codable, Hashable {
             return .fresh
         }
     }
+
+    func spokenSummary(
+        relativeTo referenceDate: Date = Date(),
+        calendar: Calendar = .current
+    ) -> String {
+        var components = [foodName]
+
+        if let foodCategory {
+            components.append("Food type \(foodCategory.displayName)")
+        }
+
+        let frozenText: String
+        if calendar.isDate(dateFrozen, inSameDayAs: referenceDate) {
+            frozenText = "Frozen today"
+        } else {
+            frozenText = "Frozen \(Self.summaryDateFormatter.string(from: dateFrozen))"
+        }
+        components.append(frozenText)
+
+        if let bestBeforeDate {
+            components.append("Best quality by \(Self.summaryDateFormatter.string(from: bestBeforeDate))")
+        } else {
+            components.append("No best-quality date set")
+        }
+
+        if let notes {
+            let trimmedNotes = notes.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !trimmedNotes.isEmpty {
+                components.append("Notes: \(trimmedNotes)")
+            }
+        }
+
+        return components.joined(separator: ". ") + "."
+    }
+
+    private static let summaryDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .none
+        return formatter
+    }()
 }
