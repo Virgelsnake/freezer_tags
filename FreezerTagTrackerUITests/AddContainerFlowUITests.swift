@@ -33,6 +33,76 @@ final class AddContainerFlowUITests: XCTestCase {
         XCTAssertEqual(foodNameField.value as? String, "Fish pie")
     }
 
+    func testAddContainerDoesNotAutoFocusFoodNameField() {
+        let app = makeApp()
+
+        app.launch()
+        openAddContainer(in: app)
+
+        XCTAssertFalse(app.keyboards.element.exists)
+    }
+
+    func testMicrophoneButtonFillsFoodNameWithoutOpeningKeyboard() {
+        let dictatedFoodName = "Chicken casserole"
+        let app = makeApp(spokenFoodName: dictatedFoodName)
+
+        app.launch()
+        openAddContainer(in: app)
+        app.buttons["addContainer.microphoneButton"].tap()
+
+        let foodNameField = app.textFields["addContainer.foodNameField"]
+        XCTAssertEqual(foodNameField.value as? String, dictatedFoodName)
+        XCTAssertFalse(app.keyboards.element.exists)
+    }
+
+    func testMicrophoneButtonDismissesKeyboardWhenFoodNameFieldWasAlreadyFocused() {
+        let dictatedFoodName = "Chicken casserole"
+        let app = makeApp(spokenFoodName: dictatedFoodName)
+
+        app.launch()
+        openAddContainer(in: app)
+
+        let foodNameField = app.textFields["addContainer.foodNameField"]
+        foodNameField.tap()
+        XCTAssertTrue(app.keyboards.element.waitForExistence(timeout: 2))
+
+        app.buttons["addContainer.microphoneButton"].tap()
+
+        XCTAssertEqual(foodNameField.value as? String, dictatedFoodName)
+        XCTAssertFalse(app.keyboards.element.exists)
+    }
+
+    func testNotesMicrophoneButtonFillsNotesWithoutOpeningKeyboard() {
+        let dictatedNote = "Use within two weeks"
+        let app = makeApp(spokenNote: dictatedNote)
+
+        app.launch()
+        openAddContainer(in: app)
+        app.buttons["addContainer.notesMicrophoneButton"].tap()
+
+        let notesEditor = app.textViews["addContainer.notesEditor"]
+        XCTAssertEqual(notesEditor.value as? String, dictatedNote)
+        XCTAssertFalse(app.keyboards.element.exists)
+    }
+
+    func testNotesMicrophoneButtonAppendsToExistingNotesAndDismissesKeyboard() {
+        let dictatedNote = "Label says mild curry"
+        let app = makeApp(spokenNote: dictatedNote)
+
+        app.launch()
+        openAddContainer(in: app)
+
+        let notesEditor = app.textViews["addContainer.notesEditor"]
+        notesEditor.tap()
+        notesEditor.typeText("Leftovers")
+        XCTAssertTrue(app.keyboards.element.waitForExistence(timeout: 2))
+
+        app.buttons["addContainer.notesMicrophoneButton"].tap()
+
+        XCTAssertEqual(notesEditor.value as? String, "Leftovers\n\(dictatedNote)")
+        XCTAssertFalse(app.keyboards.element.exists)
+    }
+
     func testSuccessfulWriteShowsSuccessState() {
         let app = makeApp(writeResult: "success")
 
@@ -76,6 +146,7 @@ final class AddContainerFlowUITests: XCTestCase {
 
         openAddContainer(in: app)
         XCTAssertFalse(app.buttons["addContainer.microphoneButton"].exists)
+        XCTAssertFalse(app.buttons["addContainer.notesMicrophoneButton"].exists)
         enterFoodName("Lentil soup", in: app)
         app.buttons["addContainer.reviewButton"].tap()
         XCTAssertTrue(app.staticTexts["Review and write"].waitForExistence(timeout: 2))
@@ -146,12 +217,22 @@ final class AddContainerFlowUITests: XCTestCase {
         }
     }
 
-    private func makeApp(writeResult: String = "success") -> XCUIApplication {
+    private func makeApp(
+        writeResult: String = "success",
+        spokenFoodName: String? = nil,
+        spokenNote: String? = nil
+    ) -> XCUIApplication {
         let app = XCUIApplication()
         app.launchEnvironment["UITEST_MODE"] = "1"
         app.launchEnvironment["UITEST_RESET_STATE"] = "1"
         app.launchEnvironment["UITEST_TAG_WRITE_RESULT"] = writeResult
         app.launchEnvironment["UITEST_USER_DEFAULTS_SUITE"] = "FreezerTagTrackerUITests.\(name)"
+        if let spokenFoodName {
+            app.launchEnvironment["UITEST_SPOKEN_FOOD_NAME"] = spokenFoodName
+        }
+        if let spokenNote {
+            app.launchEnvironment["UITEST_SPOKEN_NOTE"] = spokenNote
+        }
         return app
     }
 }

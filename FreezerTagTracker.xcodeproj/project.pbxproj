@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 77;
+	objectVersion = 63;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -20,6 +20,7 @@
 		4456C797E6BF460778535696 /* LabeledDateRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03DE518E920ACCA15007A511 /* LabeledDateRow.swift */; };
 		4A270EDCABFBCFEA0EC68EC1 /* ContainerEntity+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D95715940DDAC6E88647A24 /* ContainerEntity+CoreDataProperties.swift */; };
 		4F7915F0FAA147D5D57F34EF /* HapticsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7CD4468E4467BA1A0918FD2 /* HapticsService.swift */; };
+		21A0E5603A12B8DA00112233 /* FoodNameSpeechRecognizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21A0E5613A12B8DA00112233 /* FoodNameSpeechRecognizer.swift */; };
 		592F8B41C18938CC303296F3 /* ContainerRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = E458C7A14CFF1E0F17E2C1AD /* ContainerRecord.swift */; };
 		611118416E964A29CF546E4B /* ContainerViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B34A46A5B241F240C65113F /* ContainerViewModel.swift */; };
 		612F4033DC6EC7BA1DE04FEA /* DataStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61C0DEBEFF854EDD5DA9EF10 /* DataStoreTests.swift */; };
@@ -93,8 +94,9 @@
 		1D95715940DDAC6E88647A24 /* ContainerEntity+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ContainerEntity+CoreDataProperties.swift"; sourceTree = "<group>"; };
 		1E08C4FEBED68E2F0357C739 /* ContainerSummaryCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContainerSummaryCard.swift; sourceTree = "<group>"; };
 		220B4F712926CC9C24DBFA74 /* FreezerTagTrackerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FreezerTagTrackerApp.swift; sourceTree = "<group>"; };
-		226A0A9682A35A13898CDCA6 /* FreezerTagTracker.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = FreezerTagTracker.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		226A0A9682A35A13898CDCA6 /* FreezerTagTracker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FreezerTagTracker.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		25CE10B2FECB9BCD1E8191D2 /* FoodCategory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodCategory.swift; sourceTree = "<group>"; };
+		21A0E5613A12B8DA00112233 /* FoodNameSpeechRecognizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodNameSpeechRecognizer.swift; sourceTree = "<group>"; };
 		2852FAB27451888415628E87 /* FreezerTagTracker.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = FreezerTagTracker.entitlements; sourceTree = "<group>"; };
 		2CB16033043B750E6C0C81FD /* AddContainerStep.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddContainerStep.swift; sourceTree = "<group>"; };
 		35A81B26B3EA7B7AC358EB11 /* ContainerViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContainerViewModelTests.swift; sourceTree = "<group>"; };
@@ -182,6 +184,7 @@
 			children = (
 				964B16E5548E3FBCFABFF7C1 /* AccessibilityAnnouncementService.swift */,
 				0BD42340516165E2429A4234 /* BestQualityDateCalculator.swift */,
+				21A0E5613A12B8DA00112233 /* FoodNameSpeechRecognizer.swift */,
 				F7CD4468E4467BA1A0918FD2 /* HapticsService.swift */,
 				E8EF60061920B9840CC5829D /* SpokenFeedbackService.swift */,
 			);
@@ -387,7 +390,6 @@
 			);
 			mainGroup = D7CC5FE8DB6D44E132B6198A;
 			minimizedProjectReferenceProxies = 1;
-			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -457,6 +459,7 @@
 				D41A8272094352BA91487966 /* FoodCategoryPreset.swift in Sources */,
 				F37374C45C9B654906D6ABBE /* FoodPresetButton.swift in Sources */,
 				CCC8AE8FDF0AFD5A7C680C7B /* FoodPresetEditorView.swift in Sources */,
+				21A0E5603A12B8DA00112233 /* FoodNameSpeechRecognizer.swift in Sources */,
 				1C85B45039763A65A8B2AA06 /* FreezerTagTracker.xcdatamodeld in Sources */,
 				CBE019231DC074B905611FA6 /* FreezerTagTrackerApp.swift in Sources */,
 				4F7915F0FAA147D5D57F34EF /* HapticsService.swift in Sources */,
@@ -568,6 +571,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = FreezerTagTracker/FreezerTagTracker.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				DEVELOPMENT_TEAM = 5Q2NHC46A2;
 				INFOPLIST_FILE = FreezerTagTracker/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -626,6 +630,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = FreezerTagTracker/FreezerTagTracker.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				DEVELOPMENT_TEAM = 5Q2NHC46A2;
 				INFOPLIST_FILE = FreezerTagTracker/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (

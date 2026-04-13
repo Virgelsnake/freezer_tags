@@ -6,6 +6,9 @@ struct AddContainerDetailsView: View {
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @FocusState private var focusedField: Field?
+    @FocusState private var isNotesFocused: Bool
+    @StateObject private var foodNameSpeechRecognizer = SpeechToTextRecognizer(copy: .foodName)
+    @StateObject private var notesSpeechRecognizer = SpeechToTextRecognizer(copy: .notes)
     @State private var activePicker: ActivePicker?
     @State private var pendingBestQualityDate = Date()
     @State private var pendingDateFrozen = Date()
@@ -51,8 +54,30 @@ struct AddContainerDetailsView: View {
         .onAppear {
             pendingDateFrozen = viewModel.draft.dateFrozen
             pendingBestQualityDate = viewModel.draft.bestQualityDate ?? viewModel.draft.dateFrozen
-            focusedField = .foodName
+            focusedField = nil
+            isNotesFocused = false
+            dismissKeyboard()
             viewModel.handleDetailsScreenAppeared()
+        }
+        .onDisappear {
+            foodNameSpeechRecognizer.stopListening()
+            notesSpeechRecognizer.stopListening()
+        }
+        .onChange(of: focusedField) { field in
+            guard field == .foodName else {
+                return
+            }
+
+            foodNameSpeechRecognizer.stopListening()
+            notesSpeechRecognizer.stopListening()
+        }
+        .onChange(of: isNotesFocused) { isFocused in
+            guard isFocused else {
+                return
+            }
+
+            foodNameSpeechRecognizer.stopListening()
+            notesSpeechRecognizer.stopListening()
         }
     }
 
@@ -99,6 +124,10 @@ struct AddContainerDetailsView: View {
                 Text(validationMessage == "Food name is required." ? "Enter a food name to continue" : validationMessage)
                     .font(.footnote)
                     .foregroundStyle(Color.red)
+            } else if let speechStatusMessage = foodNameSpeechRecognizer.statusMessage {
+                Text(speechStatusMessage)
+                    .font(.footnote)
+                    .foregroundStyle(foodNameSpeechRecognizer.isShowingError ? Color.red : Color.secondary)
             } else {
                 Text("Required")
                     .font(.footnote)
@@ -139,9 +168,15 @@ struct AddContainerDetailsView: View {
 
     private func microphoneButton(maxWidth: Bool) -> some View {
         Button {
-            focusedField = .foodName
+            focusedField = nil
+            isNotesFocused = false
+            dismissKeyboard()
+            notesSpeechRecognizer.stopListening()
+            foodNameSpeechRecognizer.toggleListening { transcript in
+                viewModel.updateFoodName(transcript)
+            }
         } label: {
-            Label("Speak food name", systemImage: "mic.fill")
+            Label(foodNameSpeechRecognizer.buttonTitle, systemImage: foodNameSpeechRecognizer.buttonSystemImage)
                 .font(.body.weight(.semibold))
                 .frame(maxWidth: maxWidth ? .infinity : nil, minHeight: 60)
                 .padding(.horizontal, 16)
@@ -155,8 +190,41 @@ struct AddContainerDetailsView: View {
                 )
         }
         .buttonStyle(.plain)
-        .accessibilityHint("Double tap to dictate the name of the food.")
+        .accessibilityHint(foodNameSpeechRecognizer.isListening ? "Double tap to stop listening." : "Double tap to dictate the name of the food.")
         .accessibilityIdentifier("addContainer.microphoneButton")
+    }
+
+    private func notesMicrophoneButton(maxWidth: Bool) -> some View {
+        Button {
+            focusedField = nil
+            isNotesFocused = false
+            dismissKeyboard()
+            foodNameSpeechRecognizer.stopListening()
+            let existingNotes = viewModel.draft.notes.trimmingCharacters(in: .whitespacesAndNewlines)
+            notesSpeechRecognizer.toggleListening { transcript in
+                viewModel.updateNotes(combinedNotes(base: existingNotes, dictatedNote: transcript))
+            }
+        } label: {
+            Label(notesSpeechRecognizer.buttonTitle, systemImage: notesSpeechRecognizer.buttonSystemImage)
+                .font(.footnote.weight(.semibold))
+                .frame(maxWidth: maxWidth ? .infinity : nil, minHeight: 44)
+                .padding(.horizontal, 12)
+                .background(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .fill(Color(.tertiarySystemBackground))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .stroke(Color(.separator), lineWidth: 1)
+                )
+        }
+        .buttonStyle(.plain)
+        .accessibilityHint(notesSpeechRecognizer.isListening ? "Double tap to stop listening." : "Double tap to dictate a note.")
+        .accessibilityIdentifier("addContainer.notesMicrophoneButton")
+    }
+
+    private func dismissKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
 
     private var presetSection: some View {
@@ -239,15 +307,48 @@ struct AddContainerDetailsView: View {
     }
 
     private var notesSection: some View {
-        CharacterCountTextEditor(
-            text: Binding(
-                get: { viewModel.draft.notes },
-                set: { viewModel.updateNotes($0) }
-            ),
-            title: "Notes",
-            placeholder: "Optional notes",
-            characterLimit: 200
-        )
+        VStack(alignment: .leading, spacing: 10) {
+            if dynamicTypeSize.isAccessibilitySize {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Notes")
+                        .font(.headline)
+
+                    if viewModel.showsMicrophoneShortcut {
+                        notesMicrophoneButton(maxWidth: true)
+                    }
+                }
+            } else {
+                HStack(alignment: .center, spacing: 12) {
+                    Text("Notes")
+                        .font(.headline)
+
+                    Spacer(minLength: 12)
+
+                    if viewModel.showsMicrophoneShortcut {
+                        notesMicrophoneButton(maxWidth: false)
+                    }
+                }
+            }
+
+            CharacterCountTextEditor(
+                text: Binding(
+                    get: { viewModel.draft.notes },
+                    set: { viewModel.updateNotes($0) }
+                ),
+                title: nil,
+                accessibilityLabel: "Notes",
+                placeholder: "Optional notes",
+                characterLimit: 200,
+                focus: $isNotesFocused
+            )
+
+            if let statusMessage = notesSpeechRecognizer.statusMessage {
+                Text(statusMessage)
+                    .font(.footnote)
+                    .foregroundStyle(notesSpeechRecognizer.isShowingError ? Color.red : Color.secondary)
+            }
+        }
+        .accessibilityElement(children: .contain)
         .accessibilitySortPriority(2)
     }
 
@@ -368,6 +469,20 @@ struct AddContainerDetailsView: View {
         formatter.dateStyle = .long
         formatter.timeStyle = .none
         return formatter.string(from: date)
+    }
+
+    private func combinedNotes(base: String, dictatedNote: String) -> String {
+        let trimmedTranscript = dictatedNote.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        guard !trimmedTranscript.isEmpty else {
+            return base
+        }
+
+        guard !base.isEmpty else {
+            return trimmedTranscript
+        }
+
+        return "\(base)\n\(trimmedTranscript)"
     }
 }
 

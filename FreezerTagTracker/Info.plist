@@ -22,6 +22,10 @@
 	<true/>
 	<key>NFCReaderUsageDescription</key>
 	<string>This app needs NFC access to read and write container information to NFC tags</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>This app needs microphone access so you can dictate food names and notes instead of typing them</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>This app needs speech recognition so it can turn your spoken food names and notes into text</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchScreen</key>

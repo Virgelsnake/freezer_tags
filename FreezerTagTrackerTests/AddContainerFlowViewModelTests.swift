@@ -441,9 +441,11 @@ final class AddContainerFlowViewModelTests: XCTestCase {
     }
 
     func testHandleReviewScreenAppearedSpeaksReviewSummaryWhenGuidanceIsEnabled() {
+        let calendar = Calendar(identifier: .gregorian)
+        let dateFrozen = calendar.date(from: DateComponents(year: 2026, month: 4, day: 10))!
         let speech = RecordingSpokenFeedbackService()
         let viewModel = makeViewModel(
-            draft: AddContainerDraft(foodName: "Chicken soup"),
+            draft: AddContainerDraft(foodName: "Chicken soup", dateFrozen: dateFrozen),
             tagWriter: RecordingTagWriter(),
             recordStore: RecordingRecordStore(),
             spokenFeedbackService: speech
@@ -476,10 +478,12 @@ final class AddContainerFlowViewModelTests: XCTestCase {
     }
 
     func testHandleReviewScreenAppearedUsesVoiceOverAnnouncementWithoutCustomSpeech() {
+        let calendar = Calendar(identifier: .gregorian)
+        let dateFrozen = calendar.date(from: DateComponents(year: 2026, month: 4, day: 10))!
         let speech = RecordingSpokenFeedbackService()
         let announcements = RecordingAccessibilityAnnouncementService()
         let viewModel = makeViewModel(
-            draft: AddContainerDraft(foodName: "Chicken soup"),
+            draft: AddContainerDraft(foodName: "Chicken soup", dateFrozen: dateFrozen),
             tagWriter: RecordingTagWriter(),
             recordStore: RecordingRecordStore(),
             spokenFeedbackService: speech,
