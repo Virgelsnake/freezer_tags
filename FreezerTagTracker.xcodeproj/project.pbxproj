@@ -36,6 +36,11 @@
 		83B407F6BECD56E72B71E2D4 /* AddContainerFlowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D88104BD5A93D1D98084C174 /* AddContainerFlowView.swift */; };
 		88CC0D218EF42DA92F6FDDC6 /* TagWritingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76F31E2B19CD6BFB5009CC5C /* TagWritingView.swift */; };
 		9025E0E2CEFA01D6CC99EFE4 /* SpokenFeedbackService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8EF60061920B9840CC5829D /* SpokenFeedbackService.swift */; };
+		A10000000000000000000002 /* GS1EvidenceModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000001 /* GS1EvidenceModels.swift */; };
+		A10000000000000000000004 /* GS1EvidenceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000003 /* GS1EvidenceService.swift */; };
+		A10000000000000000000006 /* GS1EvidenceViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000005 /* GS1EvidenceViewModel.swift */; };
+		A10000000000000000000008 /* GS1EvidenceModeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000007 /* GS1EvidenceModeView.swift */; };
+		A1000000000000000000000A /* GS1EvidenceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000009 /* GS1EvidenceTests.swift */; };
 		A5CED60E3FB78D2484DEF76A /* CharacterCountTextEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCFDC97B1219CA68922C2A2A /* CharacterCountTextEditor.swift */; };
 		A5E233C94CE7697A85CD0E7A /* DataStoreError.swift in Sources */ = {isa = PBXBuildFile; fileRef = D25CF02CE9459D048E585412 /* DataStoreError.swift */; };
 		A7BE311B3AF1776FE43C2E0E /* FreezerTagTrackerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88D40709B7471BD1B1C2B3F8 /* FreezerTagTrackerTests.swift */; };
@@ -128,6 +133,11 @@
 		9B8FEB48E5DA2F0DDCAFC4F9 /* SettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewModel.swift; sourceTree = "<group>"; };
 		AA0164059E1B232406E07800 /* ContainerDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContainerDetailView.swift; sourceTree = "<group>"; };
 		AAFAB329F2FED7E8168AAB78 /* AddContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddContainerView.swift; sourceTree = "<group>"; };
+		A10000000000000000000001 /* GS1EvidenceModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GS1EvidenceModels.swift; sourceTree = "<group>"; };
+		A10000000000000000000003 /* GS1EvidenceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GS1EvidenceService.swift; sourceTree = "<group>"; };
+		A10000000000000000000005 /* GS1EvidenceViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GS1EvidenceViewModel.swift; sourceTree = "<group>"; };
+		A10000000000000000000007 /* GS1EvidenceModeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GS1EvidenceModeView.swift; sourceTree = "<group>"; };
+		A10000000000000000000009 /* GS1EvidenceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GS1EvidenceTests.swift; sourceTree = "<group>"; };
 		AECF603D2CEE785FE4EA9013 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		C36259D92D42BCF6773D77B9 /* ContainerRecordTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContainerRecordTests.swift; sourceTree = "<group>"; };
 		C85145A8AC9E684364A632AC /* NFCManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NFCManager.swift; sourceTree = "<group>"; };
@@ -150,6 +160,7 @@
 			children = (
 				07564155D8A34B545174855F /* AddContainerFlowViewModel.swift */,
 				7B34A46A5B241F240C65113F /* ContainerViewModel.swift */,
+				A10000000000000000000005 /* GS1EvidenceViewModel.swift */,
 				9B8FEB48E5DA2F0DDCAFC4F9 /* SettingsViewModel.swift */,
 			);
 			path = ViewModels;
@@ -170,6 +181,7 @@
 				AAFAB329F2FED7E8168AAB78 /* AddContainerView.swift */,
 				AA0164059E1B232406E07800 /* ContainerDetailView.swift */,
 				04BCBBAC9FD84A6A2A83D0D3 /* EditContainerView.swift */,
+				A10000000000000000000007 /* GS1EvidenceModeView.swift */,
 				92AC27B5C129634F852523B5 /* HomeView.swift */,
 				83289652F99625034A344658 /* ScanView.swift */,
 				75BFB2D37B0658CA90E21733 /* AddContainer */,
@@ -185,6 +197,7 @@
 				964B16E5548E3FBCFABFF7C1 /* AccessibilityAnnouncementService.swift */,
 				0BD42340516165E2429A4234 /* BestQualityDateCalculator.swift */,
 				21A0E5613A12B8DA00112233 /* FoodNameSpeechRecognizer.swift */,
+				A10000000000000000000003 /* GS1EvidenceService.swift */,
 				F7CD4468E4467BA1A0918FD2 /* HapticsService.swift */,
 				E8EF60061920B9840CC5829D /* SpokenFeedbackService.swift */,
 			);
@@ -230,6 +243,7 @@
 				E458C7A14CFF1E0F17E2C1AD /* ContainerRecord.swift */,
 				25CE10B2FECB9BCD1E8191D2 /* FoodCategory.swift */,
 				0E11FB706E07DB160FEC8167 /* FoodCategoryPreset.swift */,
+				A10000000000000000000001 /* GS1EvidenceModels.swift */,
 				16DEF2DF1438504573CE0793 /* NFCError.swift */,
 				C85145A8AC9E684364A632AC /* NFCManager.swift */,
 				7E613AC5451DAAE2EF14F75E /* TagWriteResult.swift */,
@@ -249,6 +263,7 @@
 				35A81B26B3EA7B7AC358EB11 /* ContainerViewModelTests.swift */,
 				61C0DEBEFF854EDD5DA9EF10 /* DataStoreTests.swift */,
 				88D40709B7471BD1B1C2B3F8 /* FreezerTagTrackerTests.swift */,
+				A10000000000000000000009 /* GS1EvidenceTests.swift */,
 				55B0B1FB614C209D2B93543B /* Info.plist */,
 				8A9600397C2AC651D4420699 /* SettingsViewModelTests.swift */,
 			);
@@ -462,6 +477,10 @@
 				21A0E5603A12B8DA00112233 /* FoodNameSpeechRecognizer.swift in Sources */,
 				1C85B45039763A65A8B2AA06 /* FreezerTagTracker.xcdatamodeld in Sources */,
 				CBE019231DC074B905611FA6 /* FreezerTagTrackerApp.swift in Sources */,
+				A10000000000000000000008 /* GS1EvidenceModeView.swift in Sources */,
+				A10000000000000000000002 /* GS1EvidenceModels.swift in Sources */,
+				A10000000000000000000004 /* GS1EvidenceService.swift in Sources */,
+				A10000000000000000000006 /* GS1EvidenceViewModel.swift in Sources */,
 				4F7915F0FAA147D5D57F34EF /* HapticsService.swift in Sources */,
 				6221FF388BAB4DF96B8BF3D7 /* HomeView.swift in Sources */,
 				4456C797E6BF460778535696 /* LabeledDateRow.swift in Sources */,
@@ -489,6 +508,7 @@
 				2ECD3283CF326E631AFD7650 /* ContainerViewModelTests.swift in Sources */,
 				612F4033DC6EC7BA1DE04FEA /* DataStoreTests.swift in Sources */,
 				A7BE311B3AF1776FE43C2E0E /* FreezerTagTrackerTests.swift in Sources */,
+				A1000000000000000000000A /* GS1EvidenceTests.swift in Sources */,
 				1A4861F0723914AE2238D8AA /* SettingsViewModelTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

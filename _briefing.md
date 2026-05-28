@@ -20,15 +20,15 @@ DTP has it as a feasibility/product-candidate build. The source PRD states that 
 
 - **DTP software category:** product candidate
 - **Development state:** PoC
-- **Commercial status:** needs physical-device NFC validation and packaging before it can be called an MVP or product
-- **Last verified:** 2026-05-27 19:21 BST
-- **Works locally:** yes, in the iOS simulator for build, unit tests and UI tests. NFC itself remains unverified because Core NFC needs a physical iPhone and tags.
-- **Tests:** `xcodebuild test -project FreezerTagTracker.xcodeproj -scheme FreezerTagTracker -destination 'platform=iOS Simulator,name=iPhone 17'` succeeded on 2026-05-27. The UI test suite reported 11 tests, 0 failures. The test run produced `/Users/hudsonrebel/Library/Developer/Xcode/DerivedData/FreezerTagTracker-czhswumcurowsxciuemgmamnfzgx/Logs/Test/Test-FreezerTagTracker-2026.05.27_19-18-05-+0100.xcresult`.
+- **Commercial status:** domestic PoC has physical NFC feasibility confirmed by Steve; GS1 Evidence Mode is now a simulator-verifiable market-application slice, but still needs physical GS1 NFC validation, packaging/food-contact decisions and compliance review before it can be called an MVP or product.
+- **Last verified:** 2026-05-28 08:00 BST
+- **Works locally:** yes, in the iOS simulator for build, unit tests and UI tests. Steve has physically confirmed the existing NFC cards work and work through the container for the domestic PoC. The new GS1 Evidence Mode NFC path remains simulator/demo only.
+- **Tests:** `xcodebuild test -project FreezerTagTracker.xcodeproj -scheme FreezerTagTracker -destination 'platform=iOS Simulator,name=iPhone 17'` succeeded on 2026-05-28. The unit suite reported 108 tests, 0 failures. The test run produced `/Users/hudsonrebel/Library/Developer/Xcode/DerivedData/FreezerTagTracker-czhswumcurowsxciuemgmamnfzgx/Logs/Test/Test-FreezerTagTracker-2026.05.28_07-57-09-+0100.xcresult`.
 - **Main risks:**
-  - NFC read/write behaviour is not proven until tested on a physical NFC-capable iPhone with real tags.
+  - GS1 Evidence Mode currently uses a simulator/demo tag-link path; physical GS1-style NFC write/read still needs implementation and device validation.
+  - The app must not claim GS1 certification, legal compliance, food-safety compliance or tamper-proof chain of custody.
+  - The current generic Amazon PVC NFC cards are PoC/dev tags only unless food-contact documentation is obtained; customer-facing demos should prefer external tag placement.
   - The current project includes Xcode user-state files in Git history, including `FreezerTagTracker.xcodeproj/project.xcworkspace/xcuserdata/steveshearman.xcuserdatad/UserInterfaceState.xcuserstate`.
-  - Tag type, freezer durability, food-safe attachment method and tag reuse rules are still open product questions.
-  - There is no README or operator-facing setup guide yet.
 
 ## How to run
 
@@ -132,8 +132,9 @@ Current repository state after verification:
 
 Hudson-owned:
 
-- Create a focused `coding-projects` card for physical-device NFC validation with an exact manual checklist.
-- Add a short README covering setup, simulator tests and the physical NFC validation boundary.
+- Create a focused `coding-projects` card for physical GS1 NFC validation with exact manual checklist and proof-limit gates.
+- Review Codex's GS1 Evidence Mode implementation and decide whether to promote the simulator/demo slice into a physical NFC pass.
+- Add CSV/JSON import and native share-sheet export if Steve wants the GS1 market application to move beyond demo evidence.
 - Normalise the local Git remote to the DTP organisation URL if verification shows this is a stale local display rather than an intentional rewrite.
 - Create a scoped hygiene card to stop tracking Xcode user-state files without touching source code.
 

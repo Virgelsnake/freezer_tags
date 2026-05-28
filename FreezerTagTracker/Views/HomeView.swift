@@ -10,6 +10,7 @@ struct HomeView: View {
     @State private var showContainerDetail = false
     @State private var waitingForNFCDismissal = false
     @State private var showSettings = false
+    @State private var showGS1EvidenceMode = false
     @State private var addFlowPresentation: AddFlowPresentation?
 
     init(
@@ -79,6 +80,23 @@ struct HomeView: View {
                         .foregroundStyle(.white)
                         .cornerRadius(12)
                     }
+
+                    Button {
+                        showGS1EvidenceMode = true
+                    } label: {
+                        HStack {
+                            Image(systemName: "checklist.checked")
+                                .font(.title2)
+                            Text("GS1 Evidence Mode")
+                                .font(.headline)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.indigo)
+                        .foregroundStyle(.white)
+                        .cornerRadius(12)
+                    }
+                    .accessibilityIdentifier("home.gs1EvidenceMode")
                     
                 }
                 .padding(.horizontal, 32)
@@ -117,6 +135,18 @@ struct HomeView: View {
             .sheet(isPresented: $showSettings) {
                 NavigationView {
                     SettingsView(viewModel: settingsViewModel)
+                }
+            }
+            .sheet(isPresented: $showGS1EvidenceMode) {
+                NavigationView {
+                    GS1EvidenceModeView()
+                        .toolbar {
+                            ToolbarItem(placement: .cancellationAction) {
+                                Button(strings.done) {
+                                    showGS1EvidenceMode = false
+                                }
+                            }
+                        }
                 }
             }
             .sheet(item: $addFlowPresentation) { presentation in
