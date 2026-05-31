@@ -5,7 +5,7 @@ status: active
 owner: Hudson
 development_state: PoC
 software_category: product candidate
-updated: 2026-05-27
+updated: 2026-05-31
 ---
 
 # Freezer Tag POC — code briefing
@@ -21,9 +21,9 @@ DTP has it as a feasibility/product-candidate build. The source PRD states that 
 - **DTP software category:** product candidate
 - **Development state:** PoC
 - **Commercial status:** domestic PoC has physical NFC feasibility confirmed by Steve; GS1 Evidence Mode is now a simulator-verifiable market-application slice, but still needs physical GS1 NFC validation, packaging/food-contact decisions and compliance review before it can be called an MVP or product.
-- **Last verified:** 2026-05-28 08:00 BST
+- **Last verified:** 2026-05-31 10:26 BST
 - **Works locally:** yes, in the iOS simulator for build, unit tests and UI tests. Steve has physically confirmed the existing NFC cards work and work through the container for the domestic PoC. The new GS1 Evidence Mode NFC path remains simulator/demo only.
-- **Tests:** `xcodebuild test -project FreezerTagTracker.xcodeproj -scheme FreezerTagTracker -destination 'platform=iOS Simulator,name=iPhone 17'` succeeded on 2026-05-28. The unit suite reported 108 tests, 0 failures. The test run produced `/Users/hudsonrebel/Library/Developer/Xcode/DerivedData/FreezerTagTracker-czhswumcurowsxciuemgmamnfzgx/Logs/Test/Test-FreezerTagTracker-2026.05.28_07-57-09-+0100.xcresult`.
+- **Tests:** `xcodebuild test -project FreezerTagTracker.xcodeproj -scheme FreezerTagTracker -destination 'platform=iOS Simulator,name=iPhone 17'` succeeded on 2026-05-31. The final UI-test suite reported 11 UI tests, 0 failures, and the run ended with `** TEST SUCCEEDED **`. The test run produced `/Users/hudsonrebel/Library/Developer/Xcode/DerivedData/FreezerTagTracker-czhswumcurowsxciuemgmamnfzgx/Logs/Test/Test-FreezerTagTracker-2026.05.31_10-23-11-+0100.xcresult`.
 - **Main risks:**
   - GS1 Evidence Mode currently uses a simulator/demo tag-link path; physical GS1-style NFC write/read still needs implementation and device validation.
   - The app must not claim GS1 certification, legal compliance, food-safety compliance or tamper-proof chain of custody.
@@ -104,11 +104,11 @@ Current repository state after verification:
 - Git repo at `/Users/hudsonrebel/DTP Coding Projects/freezer-tag-poc`.
 - Branch: `develop`.
 - Current GitHub repo viewed by `gh`: `Digital-Technology-Partner-ai/freezer_tags`.
-- Local `origin` prints as `https://github.com/Virgelsnake/freezer_tags.git`; this may be URL rewriting or a stale remote display and should be normalised to the DTP org URL if safe.
+- Local `origin`: `https://github.com/Digital-Technology-Partner-ai/freezer_tags.git`.
 - Source snapshot/provenance path: `/Users/hudsonrebel/My Drive/DTP Inbox/freezer_tag_poc`.
-- The inbox snapshot matched the coding-project copy except for Xcode workspace user-state data.
 - Added `.gitignore` on 2026-05-27 to prevent future macOS, Xcode user state, build output, SwiftPM build folders, editor state and local secret files from entering the repo.
-- Existing tracked Xcode user-state files have not been removed, because untracking/removing already tracked files is repo hygiene work that should be done as a normal scoped commit after Steve approves or a dedicated card is created.
+- Added `README.md` on 2026-05-31 with setup, simulator-test commands, and the physical-NFC caveat.
+- Removed tracked Xcode user-state files from version control with `git rm --cached` on 2026-05-31; they remain ignored for local developer machines.
 
 ## Related DTP records
 
